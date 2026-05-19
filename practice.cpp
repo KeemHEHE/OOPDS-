@@ -1,65 +1,65 @@
 #include <iostream>
 using namespace std;
 
-class Box {
+class Register {
     private:
-        int number;
+        signed char value; //changed from int to signed char
 
     public:
         // constructor - runs automatically when box is created
         // sets number to 0 by default
-        Box() {
-            number = 0;
+        Register() {
+            value = 0;
         }
-         void setNumber (int n) {
+         void setValue (int n) { //renamed from setNumber
             // only allow numbers between -128 and 127
             if (n>127) {
-                cout << "TOO BIG! Max is 127" <<endl;
-                number = 127; // store max value
+                cout << "OVERFLOW! Value too big" <<endl;
+                value = 127; // store max value
             } else if (n<-128) {
-                cout << "TOO SMALL! Min is -128" <<endl;
-                number = -128; // store min value
+                cout << "UNDERFLOW! Value too small" <<endl;
+                value = -128; // store min value
             } 
             else {
-                number = n; //normal, just store it
+                value = n; //normal, just store it
             }
         }
-        int getNumber() {
-            return number;
+        int getValue() {
+            return value;
         }
 
+        // print the value nicely
+         void display () {
+             cout << "Register value: " << value << endl;
+            }
 };
+        
+
 
 int main() {
-    Box myBox;
+   
 
     //test normal number
-    myBox.setNumber(50);
-    cout << "Value:" << myBox.getNumber() << endl;
+    Register R0;
+    R0.setValue(50);
+    cout << "R0 value:" << R0.getValue() << endl;
 
     //test too big number
-    myBox.setNumber(200);
-    cout << "Value:" << myBox.getNumber() << endl;
+    R0.setValue(200);
+    cout << "R0 value:" << R0.getValue() << endl;
+   
 
     //test too small number
-    myBox.setNumber(-200);
-    cout << "Value:" << myBox.getNumber() << endl;
+    R0.setValue(-200);
+    cout << "R0 value:" << R0.getValue() << endl;
 
-    //read before putting anything in
-    cout << "Default value:" << myBox.getNumber() << endl;
+    //test fresh register starts at 0
+    Register R1;
+    cout << "R1 default:" << R1.getValue() << endl;
 
-    //now put something in
-    myBox.setNumber(42);
-    cout << "After setting:" << myBox.getNumber() << endl;
-
-    //test freshBox
-    Box freshBox; //brand new box didnt store old value auto set = 0
-    cout << "Default value:" << freshBox.getNumber() << endl;
-
-    freshBox.setNumber(42);
-    cout << "After setting:" << freshBox.getNumber() << endl;
-
-
+    //test display function
+    R0.setValue(42);
+    R0.display();
 
 
     return 0;
