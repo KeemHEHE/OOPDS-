@@ -62,5 +62,21 @@ int main() {
     R0.display();
 
 
+    // ADD 8 REGISTER 
+    Register registers [8];
+
+    registers[0].setValue(5);
+    registers[1].setValue(10);
+    registers[2].setValue(15);
+
+    cout << "\nAll 8 Registers:" << endl;
+    for (int i = 0; i < 8; i++) {
+        cout << "R" << i << " = "
+        << registers[i].getValue() << endl;
+    }
+
+
+
+
     return 0;
 }
