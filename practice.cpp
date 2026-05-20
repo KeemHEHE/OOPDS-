@@ -75,6 +75,67 @@ int main() {
         << registers[i].getValue() << endl;
     }
 
+    class FlagRegister {
+        private:
+            int OF; //overflow flag
+            int UF; //underflow flag
+            int CF; //carry flag
+            int ZF; //zero flag
+            
+            
+        public:
+            // constructor - all flags start at 0 (OFF)
+            FlagRegister() {
+                OF = 0;
+                UF = 0;
+                CF = 0;
+                ZF = 0;
+            }
+
+            //turn OF on or off
+            void setOF(int v) {
+                OF = v;
+                }
+
+            //turn UF on or off
+            void setUF(int v) {
+                UF = v;
+                }
+
+            //turn CF on or off
+            void setCF(int v) {
+                CF = v;
+                }
+
+            //turn ZF on or off
+            void setZF(int v) {
+                ZF = v;
+                }
+
+            // read ZF
+            int getZF() {
+                return ZF;
+            }
+
+            // read CF
+            int getCF() {
+                return CF;
+            }
+
+            // read UF
+            int getUF() {
+                return UF; 
+            }
+
+            // read OF
+            int getOF() {
+                return OF;
+            }
+
+
+    };
+
+
 
 
 
