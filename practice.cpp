@@ -30,52 +30,13 @@ class Register {
 
         // print the value nicely
          void display () {
-             cout << "Register value: " << value << endl;
+             cout << "Register value: " << (int)value << endl;
             }
 };
-        
 
 
-int main() {
-   
 
-    //test normal number
-    Register R0;
-    R0.setValue(50);
-    cout << "R0 value:" << R0.getValue() << endl;
-
-    //test too big number
-    R0.setValue(200);
-    cout << "R0 value:" << R0.getValue() << endl;
-   
-
-    //test too small number
-    R0.setValue(-200);
-    cout << "R0 value:" << R0.getValue() << endl;
-
-    //test fresh register starts at 0
-    Register R1;
-    cout << "R1 default:" << R1.getValue() << endl;
-
-    //test display function
-    R0.setValue(42);
-    R0.display();
-
-
-    // ADD 8 REGISTER 
-    Register registers [8];
-
-    registers[0].setValue(5);
-    registers[1].setValue(10);
-    registers[2].setValue(15);
-
-    cout << "\nAll 8 Registers:" << endl;
-    for (int i = 0; i < 8; i++) {
-        cout << "R" << i << " = "
-        << registers[i].getValue() << endl;
-    }
-
-    class FlagRegister {
+        class FlagRegister {
         private:
             int OF; //overflow flag
             int UF; //underflow flag
@@ -132,12 +93,139 @@ int main() {
                 return OF;
             }
 
+            void displayFlags() {
+            cout << "OF=" << OF << " UF=" << UF << " CF=" << CF << " ZF=" << ZF << endl;
+            }
 
-    };
+            void reset (){
+            OF = 0;
+            UF = 0;
+            CF = 0;
+            ZF = 0;
+            }
+        
+};
+
+class Memory {
+    private:
+           signed char data[64]; // 64 boxes, each holds -128 to 127
+
+    public:
+           Memory() {
+               // fill all 64 slots with 0 at the start 
+               for (int i = 0; i < 64; i++) {
+                   data[i] = 0;
+               }
+           }
+
+           void write(int address, int value) {
+            // YOUR TURN: check if address is 0-63, then store value
+
+           }
+
+           int read (int address) {
+            // YOUR TURN: check if address is 0-63, then return value
+
+           }
+
+
+            
+
+            
+};
+    
 
 
 
+        
+
+        
+
+
+int main() {
+   
+    //1.Basic Register usage
+    cout << "===Register Tests===" << endl;
+
+    //test Register
+    Register R0;
+    R0.setValue(50);
+    cout << "R0 value:" << R0.getValue() << endl;
+
+    //test too big number
+    R0.setValue(200);
+    cout << "R0 value:" << R0.getValue() << endl;
+   
+
+    //test too small number
+    R0.setValue(-200);
+    cout << "R0 value:" << R0.getValue() << endl;
+
+    //test fresh register starts at 0
+    Register R1;
+    cout << "R1 default:" << R1.getValue() << endl;
+
+    //test display function
+    R0.setValue(42);
+    R0.display();
+
+
+    //2.Test array of 8 registers
+    cout << "\n===Array of Registers Tests===" << endl;
+
+    // ADD 8 REGISTER 
+    Register registers [8];
+
+    registers[0].setValue(5);
+    registers[1].setValue(10);
+    registers[2].setValue(15);
+
+    cout << "\nAll 8 Registers:" << endl;
+    for (int i = 0; i < 8; i++) {
+        cout << "R" << i << " = "
+        << registers[i].getValue() << endl;
+    }
+
+    //3. FlagRegister
+    cout << "\n===FlagRegister Tests===" << endl;
+
+
+    FlagRegister flags;
+    cout << "Initial flags:";
+    flags.displayFlags();
+
+    Register R2;
+    R2.setValue(200);  //trigger overflow
+    flags.setOF(1);
+    cout << "After overflow:";
+    flags.displayFlags();
+
+    flags.reset();
+    R2.setValue(-200); //trigger underflow
+    flags.setUF(1);
+    cout << "After underflow:";
+    flags.displayFlags();
+
+    flags.reset();
+    R2.setValue(0); //trigger zero
+    flags.setZF(1);
+    cout << "After zero:";
+    flags.displayFlags();
+
+    flags.reset();
+    flags.setCF(1);
+    cout << "After carry:";
+    flags.displayFlags();
+
+    cout << "\nReading individual flags:" << endl;
+    cout << "getOF=" << flags.getOF() << endl;
+    cout << "getUF=" << flags.getUF() << endl;
+    cout << "getCF=" << flags.getCF() << endl;
+    cout << "getZF=" << flags.getZF() << endl;
+    
 
 
     return 0;
+
+  
 }
