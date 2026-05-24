@@ -3,7 +3,7 @@ using namespace std;
 
 class Register {
     private:
-        signed char value; //changed from int to signed char
+        signed int value; //changed from int to signed char
 
     public:
         // constructor - runs automatically when box is created
@@ -113,17 +113,26 @@ class Memory {
     public:
            Memory() {
                // fill all 64 slots with 0 at the start 
-               for (int i = 0; i < 64; i++) {
+               for (int i = 0; i< 64; i++) {
                    data[i] = 0;
                }
            }
 
            void write(int address, int value) {
+               if (address >= 0 && address <= 63) {
+                    data[address]=value;
+               }
             // YOUR TURN: check if address is 0-63, then store value
 
            }
 
            int read (int address) {
+            if (address >= 0 && address <= 63) {
+                return data[address];
+            }
+            else {
+                return 0;
+            }
             // YOUR TURN: check if address is 0-63, then return value
 
            }
@@ -154,12 +163,12 @@ int main() {
 
     //test too big number
     R0.setValue(200);
-    cout << "R0 value:" << R0.getValue() << endl;
+    cout << "R0  max value:" << R0.getValue() << endl;
    
 
     //test too small number
     R0.setValue(-200);
-    cout << "R0 value:" << R0.getValue() << endl;
+    cout << "R0 min value:" << R0.getValue() << endl;
 
     //test fresh register starts at 0
     Register R1;
@@ -179,10 +188,12 @@ int main() {
     registers[0].setValue(5);
     registers[1].setValue(10);
     registers[2].setValue(15);
+    registers[3].setValue(200);
+
 
     cout << "\nAll 8 Registers:" << endl;
     for (int i = 0; i < 8; i++) {
-        cout << "R" << i << " = "
+        cout << "Registers" << i << " = "
         << registers[i].getValue() << endl;
     }
 
