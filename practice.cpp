@@ -3,7 +3,7 @@ using namespace std;
 
 class Register {
     private:
-        signed int value; //changed from int to signed char
+        signed char value; //changed from int to signed char
 
     public:
         // constructor - runs automatically when box is created
