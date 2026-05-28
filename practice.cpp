@@ -11,13 +11,12 @@ class Register {
         Register() {
             value = 0;
         }
+        virtual ~Register() {}
          void setValue (int n) { //renamed from setNumber
             // only allow numbers between -128 and 127
             if (n>127) {
-                cout << "OVERFLOW! Value too big" <<endl;
                 value = 127; // store max value
             } else if (n<-128) {
-                cout << "UNDERFLOW! Value too small" <<endl;
                 value = -128; // store min value
             } 
             else {
@@ -33,6 +32,18 @@ class Register {
              cout << "Register value: " << (int)value << endl;
             }
 };
+
+       class GeneralRegister : public Register {
+          private:
+                 int id;
+          public:
+                 GeneralRegister() : id(0) {}
+                 GeneralRegister(int id) : id(id) {}
+                 int getID() {
+                     return id;
+                 }
+                };
+
 
 
 
@@ -122,8 +133,7 @@ class Memory {
                if (address >= 0 && address <= 63) {
                     data[address]=value;
                }
-            // YOUR TURN: check if address is 0-63, then store value
-
+     
            }
 
            int read (int address) {
@@ -133,8 +143,7 @@ class Memory {
             else {
                 return 0;
             }
-            // YOUR TURN: check if address is 0-63, then return value
-
+           
            }
 
 
