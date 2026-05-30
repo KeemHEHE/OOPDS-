@@ -157,6 +157,50 @@ class Instruction {
         virtual void execute() = 0;
         virtual ~Instruction() {}
 };
+
+class CPU {
+    private:
+        GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
+        Memory memory;
+        FlagRegister flags;
+        unsigned char PC;
+        unsigned char SI;
+
+    public:
+        CPU() : PC(0), SI(0){}
+        
+        GeneralRegister& getRegister(int i) { return registers[i]; }
+        FlagRegister& getFlags() { return flags; }
+        Memory& getMemory() { return memory; }
+        unsigned char getPC() { return PC; }
+        void incrementPC() { PC++; }
+       
+
+        
+};
+
+class MOVInstruction : public Instruction {
+      private:
+            CPU& cpu;
+            int destReg;
+            int value;
+
+      public:
+            MOVInstruction(CPU& cpu, int destReg, int value)
+            : cpu(cpu), destReg(destReg), value(value) {}
+
+
+            void execute() {
+                cpu.getRegister(destReg).setValue(value);
+                cpu.getFlags().setZF(value == 0 ? 1 : 0);
+
+
+
+
+            }
+};
+
+
     
 
 
