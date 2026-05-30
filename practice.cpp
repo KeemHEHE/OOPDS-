@@ -151,6 +151,12 @@ class Memory {
 
             
 };
+
+class Instruction {
+    public:
+        virtual void execute() = 0;
+        virtual ~Instruction() {}
+};
     
 
 
@@ -192,7 +198,7 @@ int main() {
     cout << "\n===Array of Registers Tests===" << endl;
 
     // ADD 8 REGISTER 
-    Register registers [8];
+    GeneralRegister registers [8] = {0,1,2,3,4,5,6,7,};
 
     registers[0].setValue(5);
     registers[1].setValue(10);
