@@ -262,22 +262,28 @@ class MULInstruction : public Instruction {
     
             };
 
+class DIVInstruction : public Instruction {
+    private:
+        CPU& cpu;
+        int destReg;
+        int srcReg;
+
+    public:
+        DIVInstruction(CPU& cpu, int destReg, int srcReg)
+            : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
+
+        void execute() {
+            int divisor = cpu.getRegister(srcReg).getValue();
+            if (divisor == 0) return;
+            int result = cpu.getRegister(destReg).getValue() / divisor;
+            cpu.getRegister(destReg).setValue(result);
+            cpu.getFlags().setZF(result == 0 ? 1 : 0);
+        }
+
+};
 
 
 
-
-
-
-            
-
-
-    
-
-
-
-        
-
-        
 
 
 int main() {
