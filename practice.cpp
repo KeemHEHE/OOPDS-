@@ -321,6 +321,23 @@ class DECInstruction : public Instruction {
 
 };
 
+class DISPLAYInstruction : public Instruction {
+    private:
+        CPU& cpu;
+        int destReg;
+
+    public:
+        DISPLAYInstruction(CPU& cpu, int destReg)
+            : cpu(cpu), destReg(destReg) {}
+
+        void execute() {
+            cout << (int)cpu.getRegister(destReg).getValue() << endl;
+        }
+
+};
+
+
+
 
 
 
