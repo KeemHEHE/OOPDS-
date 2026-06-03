@@ -302,6 +302,27 @@ class INCInstruction : public Instruction {
         
         };
 
+class DECInstruction : public Instruction {
+    private:
+        CPU& cpu;
+        int destReg;
+
+    public:
+        DECInstruction(CPU& cpu, int destReg)
+            : cpu(cpu), destReg(destReg) {}
+
+        void execute() {
+            int result = cpu.getRegister(destReg).getValue() - 1;
+            cpu.getFlags().setOF(result > 127 ? 1 : 0);
+            cpu.getFlags().setUF(result < -128 ? 1 : 0);
+            cpu.getRegister(destReg).setValue(result);
+            cpu.getFlags().setZF(result == 0 ? 1 : 0);
+        }
+
+};
+
+
+
 
 
 
