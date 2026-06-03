@@ -241,6 +241,30 @@ class SUBInstruction : public Instruction {
 
 };
 
+class MULInstruction : public Instruction {
+    private:
+        CPU& cpu;
+        int destReg;
+        int srcReg;
+
+    public:
+        MULInstruction(CPU& cpu, int destReg, int srcReg)
+            : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
+
+            void execute() {
+                int result = cpu.getRegister(destReg).getValue()
+                            * cpu.getRegister(srcReg).getValue();
+                cpu.getFlags().setOF(result > 127 ? 1 : 0);
+                cpu.getFlags().setUF(result < -128 ? 1 : 0);
+                cpu.getRegister(destReg).setValue(result);
+                cpu.getFlags().setZF(result == 0 ? 1 : 0);
+                }
+    
+            };
+
+
+
+
 
 
 
