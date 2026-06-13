@@ -1,163 +1,113 @@
 #include <iostream>
 using namespace std;
 
+// Member 1: Adam
 class Register {
     private:
-        signed char value; //changed from int to signed char
+        signed char value;
 
     public:
-        // constructor - runs automatically when box is created
-        // sets number to 0 by default
         Register() {
             value = 0;
         }
         virtual ~Register() {}
-         void setValue (int n) { //renamed from setNumber
-            // only allow numbers between -128 and 127
-            if (n>127) {
-                value = 127; // store max value
-            } else if (n<-128) {
-                value = -128; // store min value
-            } 
-            else {
-                value = n; //normal, just store it
+
+        void setValue(int n) {
+            if (n > 127) {
+                value = 127;
+            } else if (n < -128) {
+                value = -128;
+            } else {
+                value = n;
             }
         }
+
         int getValue() {
             return value;
         }
 
-        // print the value nicely
-         void display () {
-             cout << "Register value: " << (int)value << endl;
-            }
+        void display() {
+            cout << "Register value: " << (int)value << endl;
+        }
 };
 
-       class GeneralRegister : public Register {
-          private:
-                 int id;
-          public:
-                 GeneralRegister() : id(0) {}
-                 GeneralRegister(int id) : id(id) {}
-                 int getID() {
-                     return id;
-                 }
-                };
+// Member 1: Adam
+class GeneralRegister : public Register {
+    private:
+        int id;
+    public:
+        GeneralRegister() : id(0) {}
+        GeneralRegister(int id) : id(id) {}
+        int getID() {
+            return id;
+        }
+};
 
+// Member 1: Adam
+class FlagRegister {
+    private:
+        int OF;
+        int UF;
+        int CF;
+        int ZF;
 
-
-
-        class FlagRegister {
-        private:
-            int OF; //overflow flag
-            int UF; //underflow flag
-            int CF; //carry flag
-            int ZF; //zero flag
-            
-            
-        public:
-            // constructor - all flags start at 0 (OFF)
-            FlagRegister() {
-                OF = 0;
-                UF = 0;
-                CF = 0;
-                ZF = 0;
-            }
-
-            //turn OF on or off
-            void setOF(int v) {
-                OF = v;
-                }
-
-            //turn UF on or off
-            void setUF(int v) {
-                UF = v;
-                }
-
-            //turn CF on or off
-            void setCF(int v) {
-                CF = v;
-                }
-
-            //turn ZF on or off
-            void setZF(int v) {
-                ZF = v;
-                }
-
-            // read ZF
-            int getZF() {
-                return ZF;
-            }
-
-            // read CF
-            int getCF() {
-                return CF;
-            }
-
-            // read UF
-            int getUF() {
-                return UF; 
-            }
-
-            // read OF
-            int getOF() {
-                return OF;
-            }
-
-            void displayFlags() {
-            cout << "OF=" << OF << " UF=" << UF << " CF=" << CF << " ZF=" << ZF << endl;
-            }
-
-            void reset (){
+    public:
+        FlagRegister() {
             OF = 0;
             UF = 0;
             CF = 0;
             ZF = 0;
-            }
-        
+        }
+
+        void setOF(int v) { OF = v; }
+        void setUF(int v) { UF = v; }
+        void setCF(int v) { CF = v; }
+        void setZF(int v) { ZF = v; }
+
+        int getOF() { return OF; }
+        int getUF() { return UF; }
+        int getCF() { return CF; }
+        int getZF() { return ZF; }
+
+        void displayFlags() {
+            cout << "OF=" << OF << " UF=" << UF << " CF=" << CF << " ZF=" << ZF << endl;
+        }
+
+        void reset() {
+            OF = 0;
+            UF = 0;
+            CF = 0;
+            ZF = 0;
+        }
 };
 
+// Member 1: Adam
 class Memory {
     private:
-           signed char data[64]; // 64 boxes, each holds -128 to 127
+        signed char data[64];
 
     public:
-           Memory() {
-               // fill all 64 slots with 0 at the start 
-               for (int i = 0; i< 64; i++) {
-                   data[i] = 0;
-               }
-           }
+        Memory() {
+            for (int i = 0; i < 64; i++) {
+                data[i] = 0;
+            }
+        }
 
-           void write(int address, int value) {
-               if (address >= 0 && address <= 63) {
-                    data[address]=value;
-               }
-     
-           }
+        void write(int address, int value) {
+            if (address >= 0 && address <= 63) {
+                data[address] = value;
+            }
+        }
 
-           int read (int address) {
+        int read(int address) {
             if (address >= 0 && address <= 63) {
                 return data[address];
             }
-            else {
-                return 0;
-            }
-           
-           }
-
-
-            
-
-            
+            return 0;
+        }
 };
 
-class Instruction {
-    public:
-        virtual void execute() = 0;
-        virtual ~Instruction() {}
-};
-
+// Member 1: Adam
 class CPU {
     private:
         GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
@@ -167,270 +117,65 @@ class CPU {
         unsigned char SI;
 
     public:
-        CPU() : PC(0), SI(0){}
-        
+        CPU() : PC(0), SI(0) {}
+
         GeneralRegister& getRegister(int i) { return registers[i]; }
         FlagRegister& getFlags() { return flags; }
         Memory& getMemory() { return memory; }
         unsigned char getPC() { return PC; }
         void incrementPC() { PC++; }
-       
-
-        
 };
-
-class MOVInstruction : public Instruction {
-      private:
-            CPU& cpu;
-            int destReg;
-            int value;
-
-      public:
-            MOVInstruction(CPU& cpu, int destReg, int value)
-            : cpu(cpu), destReg(destReg), value(value) {}
-
-
-            void execute() {
-                cpu.getRegister(destReg).setValue(value);
-                cpu.getFlags().setZF(value == 0 ? 1 : 0);
-
-
-
-
-            }
-};
-
-class ADDInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-        int srcReg;
-
-    public:
-        ADDInstruction(CPU& cpu, int destReg, int srcReg)
-        : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
-
-        void execute() {
-            int result = cpu.getRegister (destReg).getValue()
-                        + cpu.getRegister(srcReg).getValue();
-            cpu.getFlags().setOF(result > 127 ? 1 : 0);
-            cpu.getFlags().setUF(result < -128 ? 1 : 0);
-            cpu.getRegister(destReg).setValue(result);
-            cpu.getFlags().setZF(result == 0 ? 1 : 0);
-        }
-};
-
-class SUBInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-        int srcReg;
-
-    public:
-        SUBInstruction(CPU& cpu, int destReg, int srcReg)
-            : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
-
-        void execute() {
-            int result = cpu.getRegister(destReg).getValue()
-                        - cpu.getRegister(srcReg).getValue();
-            cpu.getFlags().setOF(result > 127 ? 1 : 0);
-            cpu.getFlags().setUF(result < -128 ? 1 : 0);
-            cpu.getRegister(destReg).setValue(result);
-            cpu.getFlags().setZF(result == 0 ? 1 : 0);
-        }
-
-};
-
-class MULInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-        int srcReg;
-
-    public:
-        MULInstruction(CPU& cpu, int destReg, int srcReg)
-            : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
-
-            void execute() {
-                int result = cpu.getRegister(destReg).getValue()
-                            * cpu.getRegister(srcReg).getValue();
-                cpu.getFlags().setOF(result > 127 ? 1 : 0);
-                cpu.getFlags().setUF(result < -128 ? 1 : 0);
-                cpu.getRegister(destReg).setValue(result);
-                cpu.getFlags().setZF(result == 0 ? 1 : 0);
-                }
-    
-            };
-
-class DIVInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-        int srcReg;
-
-    public:
-        DIVInstruction(CPU& cpu, int destReg, int srcReg)
-            : cpu(cpu), destReg(destReg), srcReg(srcReg) {}
-
-        void execute() {
-            int divisor = cpu.getRegister(srcReg).getValue();
-            if (divisor == 0) return;
-            int result = cpu.getRegister(destReg).getValue() / divisor;
-            cpu.getRegister(destReg).setValue(result);
-            cpu.getFlags().setZF(result == 0 ? 1 : 0);
-        }
-
-};
-
-class INCInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-
-    public:
-        INCInstruction(CPU& cpu, int destReg)
-            : cpu(cpu), destReg(destReg) {}
-
-        void execute() {
-            int result = cpu.getRegister(destReg).getValue() + 1;
-            cpu.getFlags().setOF(result > 127 ? 1 : 0);
-            cpu.getFlags().setUF(result < -128 ? 1 : 0);
-            cpu.getRegister (destReg).setValue(result);
-            cpu.getFlags().setZF(result == 0 ? 1 : 0);
-            
-            }
-        
-        };
-
-class DECInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-
-    public:
-        DECInstruction(CPU& cpu, int destReg)
-            : cpu(cpu), destReg(destReg) {}
-
-        void execute() {
-            int result = cpu.getRegister(destReg).getValue() - 1;
-            cpu.getFlags().setOF(result > 127 ? 1 : 0);
-            cpu.getFlags().setUF(result < -128 ? 1 : 0);
-            cpu.getRegister(destReg).setValue(result);
-            cpu.getFlags().setZF(result == 0 ? 1 : 0);
-        }
-
-};
-
-class DISPLAYInstruction : public Instruction {
-    private:
-        CPU& cpu;
-        int destReg;
-
-    public:
-        DISPLAYInstruction(CPU& cpu, int destReg)
-            : cpu(cpu), destReg(destReg) {}
-
-        void execute() {
-            cout << (int)cpu.getRegister(destReg).getValue() << endl;
-        }
-
-};
-
-
-
-
-
-
-
-
-
 
 int main() {
-   
-    //1.Basic Register usage
-    cout << "===Register Tests===" << endl;
 
-    //test Register
+    // Test Register
+    cout << "===Register Tests===" << endl;
     Register R0;
     R0.setValue(50);
-    cout << "R0 value:" << R0.getValue() << endl;
-
-    //test too big number
+    cout << "R0 value: " << R0.getValue() << endl;
     R0.setValue(200);
-    cout << "R0  max value:" << R0.getValue() << endl;
-   
-
-    //test too small number
+    cout << "R0 max clamp: " << R0.getValue() << endl;
     R0.setValue(-200);
-    cout << "R0 min value:" << R0.getValue() << endl;
-
-    //test fresh register starts at 0
-    Register R1;
-    cout << "R1 default:" << R1.getValue() << endl;
-
-    //test display function
+    cout << "R0 min clamp: " << R0.getValue() << endl;
     R0.setValue(42);
     R0.display();
 
-
-    //2.Test array of 8 registers
-    cout << "\n===Array of Registers Tests===" << endl;
-
-    // ADD 8 REGISTER 
-    GeneralRegister registers [8] = {0,1,2,3,4,5,6,7,};
-
+    // Test GeneralRegister array
+    cout << "\n===GeneralRegister Tests===" << endl;
+    GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
     registers[0].setValue(5);
     registers[1].setValue(10);
-    registers[2].setValue(15);
     registers[3].setValue(200);
-
-
-    cout << "\nAll 8 Registers:" << endl;
     for (int i = 0; i < 8; i++) {
-        cout << "Registers" << i << " = "
-        << registers[i].getValue() << endl;
+        cout << "R" << i << " = " << registers[i].getValue() << endl;
     }
 
-    //3. FlagRegister
+    // Test FlagRegister
     cout << "\n===FlagRegister Tests===" << endl;
-
-
     FlagRegister flags;
-    cout << "Initial flags:";
     flags.displayFlags();
-
-    Register R2;
-    R2.setValue(200);  //trigger overflow
     flags.setOF(1);
-    cout << "After overflow:";
     flags.displayFlags();
-
     flags.reset();
-    R2.setValue(-200); //trigger underflow
-    flags.setUF(1);
-    cout << "After underflow:";
-    flags.displayFlags();
-
-    flags.reset();
-    R2.setValue(0); //trigger zero
     flags.setZF(1);
-    cout << "After zero:";
     flags.displayFlags();
 
-    flags.reset();
-    flags.setCF(1);
-    cout << "After carry:";
-    flags.displayFlags();
+    // Test Memory
+    cout << "\n===Memory Tests===" << endl;
+    Memory mem;
+    mem.write(10, 99);
+    cout << "mem[10] = " << mem.read(10) << endl;
+    cout << "mem[0]  = " << mem.read(0) << endl;
 
-    cout << "\nReading individual flags:" << endl;
-    cout << "getOF=" << flags.getOF() << endl;
-    cout << "getUF=" << flags.getUF() << endl;
-    cout << "getCF=" << flags.getCF() << endl;
-    cout << "getZF=" << flags.getZF() << endl;
-    
-
+    // Test CPU
+    cout << "\n===CPU Tests===" << endl;
+    CPU cpu;
+    cpu.getRegister(0).setValue(77);
+    cout << "CPU R0 = " << cpu.getRegister(0).getValue() << endl;
+    cpu.getMemory().write(5, 33);
+    cout << "CPU mem[5] = " << cpu.getMemory().read(5) << endl;
+    cpu.incrementPC();
+    cout << "CPU PC = " << (int)cpu.getPC() << endl;
 
     return 0;
-
-  
 }
