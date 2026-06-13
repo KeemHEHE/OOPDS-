@@ -107,12 +107,62 @@ class Memory {
         }
 };
 
+
+class Stack {
+    private:
+        signed char data [64];
+        int top;
+
+    public:
+        Stack() : top(-1) {}
+
+        bool isEmpty() {
+            return top == -1;
+        
+        }
+
+        bool isFull() {
+            return top == 63;
+
+        }
+
+        void push(int value) {
+            if (!isFull()) {
+                top++;
+                data[top] = (signed char)value;
+            
+            }
+            
+        }
+
+        int pop() {
+            if (!isEmpty()) {
+                int val = data[top];
+                top--;
+                return val;
+            }
+            return 0;
+        }
+
+        int peek() {
+            if (!isEmpty()) return data[top];
+            return 0;
+
+        }
+
+        int getTop() {
+            return top;
+        }
+        
+};
+
 // Member 1: Adam
 class CPU {
     private:
         GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
         Memory memory;
         FlagRegister flags;
+        Stack stack;
         unsigned char PC;
         unsigned char SI;
 
