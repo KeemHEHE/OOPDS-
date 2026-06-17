@@ -1,4 +1,5 @@
 #include <iostream>
+#include <iomanip>
 using namespace std;
 
 // Member 1: Adam
@@ -107,7 +108,7 @@ class Memory {
         }
 };
 
-
+// Member 1: Adam
 class Stack {
     private:
         signed char data [64];
@@ -174,6 +175,62 @@ class CPU {
         Memory& getMemory() { return memory; }
         unsigned char getPC() { return PC; }
         void incrementPC() { PC++; }
+
+        void updateFlags(int rawResult) {
+            flags.setOF(rawResult > 127 ? 1 : 0);
+            flags.setUF(rawResult < -128 ? 1 : 0);
+            flags.setCF((rawResult > 127 || rawResult < -128)? 1 : 0);
+            flags.setZF(rawResult == 0 ? 1 : 0);
+        }
+
+        unsigned char getSI() {return SI;}
+
+        void pushStack(int value) {
+            stack.push(value);
+            SI++;
+        }
+
+        int popStack() {
+            SI--;
+            return stack.pop();
+        
+        }
+
+        void displayState() {
+            cout << "#Begin#" << endl;
+
+            cout << "#Registers#";
+            for (int i = 0; i < 8; i++) {
+                cout << "#" << setfill('0') << setw(4) << hex
+                     << (registers[i].getValue() & 0xFF);
+            }
+            cout << "#" << endl;
+
+            cout << "#Flags#" << dec
+                 << flags.getOF() << "#"
+                 << flags.getUF() << "#"
+                 << flags.getCF() << "#"
+                 << flags.getZF() << "#" << endl;
+
+            cout << "#PC#" << setfill('0') << setw(4) << hex 
+                 << (int)PC << "#" << endl;
+
+            cout << "#Memory#" << endl;
+            for (int row = 0; row < 8; row++){
+                for(int col = 0; col < 8; col++) {
+                    cout << "#" << setfill('0') << setw(4) << hex
+                        <<(memory.read(row * 8 + col) & 0xFF);
+
+                }
+                cout << "#" << endl;
+            }
+
+            cout << "#End#" << endl;
+
+            
+            
+            
+        }
 };
 
 int main() {
