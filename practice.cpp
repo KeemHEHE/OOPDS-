@@ -199,7 +199,7 @@ class CPU {
         void displayState() {
             cout << "#Begin#" << endl;
 
-            cout << "#Registers#";
+            cout << "#Registers";
             for (int i = 0; i < 8; i++) {
                 cout << "#" << setfill('0') << setw(4) << hex
                      << (registers[i].getValue() & 0xFF);
@@ -283,6 +283,18 @@ int main() {
     cout << "CPU mem[5] = " << cpu.getMemory().read(5) << endl;
     cpu.incrementPC();
     cout << "CPU PC = " << (int)cpu.getPC() << endl;
+
+    // Test displayState
+    cout << "\n===displayState Test===" << endl;
+    CPU cpu2;
+    cpu2.getRegister(1).setValue(17);
+    cpu2.getRegister(3).setValue(68);
+    cpu2.incrementPC();
+    cpu2.incrementPC();
+    cpu2.getMemory().write(20, 68);
+    cpu2.displayState();
+
+    
 
     return 0;
 }
