@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Context
 
-This is a C++ academic assignment for **CCP6124 OOPDS (Object-Oriented Programming & Data Structures)**, Term 2610. The assignment implements a **Virtual Machine and Assembly Language Interpreter** in C++. See `CCP6124 OOPDS Term 2610 Assignment - Virtual Machine.pdf` for the full specification.
+This is a C++ academic assignment for **CCP6124 OOPDS (Object-Oriented Programming & Data Structures)**, Term 2610. The assignment implements a **Virtual Machine and Assembly Language Interpreter** in C++. See `Virtualmachine2610v1.21 (1).pdf` for the full specification.
 
 **Due:** 4 July 2026, 12:00AM | **Submission:** Single `.cpp` file + PDF report + MPEG video
 
@@ -57,7 +57,7 @@ OOP requirements:
 | Arithmetic | `ADD`, `SUB`, `MUL`, `DIV`, `INC`, `DEC` |
 | Rotate | `ROL Rd, count`, `ROR Rd, count` |
 | Shift | `SHL Rd, count`, `SHR Rd, count` |
-| Memory | `LOAD Rd, [addr]` / `LOAD Rd, [Rs]`, `STORE Rd, addr` / `STORE [Rd], Rs` |
+| Memory | `LOAD Rd, [addr]` / `LOAD Rd, [Rs]`, `STORE Rd, addr` / `STORE Rs, [Rd]` |
 | Flags | `RESET <CF\|OF\|UF\|ZF>` |
 | Stack | `PUSH <Reg>`, `POP <Reg>` |
 
@@ -68,7 +68,7 @@ Flags (OF, UF, CF, ZF) must be updated after every operation that changes a regi
 ```
 #Begin#
 #Registers#0000#0011#0000#0044#0000#0000#0000#0000#
-#Flags#0#0#0#0#
+#Flags#OF#0#UF#0#CF#0#ZF#0#
 #PC#0006#
 #Memory#
 #0000#0000#0000#0000#0000#0000#0000#0000#

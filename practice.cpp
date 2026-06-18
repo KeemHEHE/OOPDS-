@@ -206,11 +206,10 @@ class CPU {
             }
             cout << "#" << endl;
 
-            cout << "#Flags#" << dec
-                 << flags.getOF() << "#"
-                 << flags.getUF() << "#"
-                 << flags.getCF() << "#"
-                 << flags.getZF() << "#" << endl;
+            cout << "#Flags#OF#" << dec << flags.getOF()
+                 << "#UF#" << flags.getUF()
+                 << "#CF#" << flags.getCF()
+                 << "#ZF#" << flags.getZF() << "#" << endl;
 
             cout << "#PC#" << setfill('0') << setw(4) << hex 
                  << (int)PC << "#" << endl;
