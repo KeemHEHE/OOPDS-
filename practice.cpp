@@ -8,11 +8,14 @@ class Register {
         signed char value;
 
     public:
+        // Initializes the register to 0.
         Register() {
             value = 0;
         }
+        // Virtual destructor so derived registers destruct safely through a base pointer.
         virtual ~Register() {}
 
+        // Sets the register's value, clamping it to the signed char range (-128 to 127).
         void setValue(int n) {
             if (n > 127) {
                 value = 127;
@@ -23,22 +26,28 @@ class Register {
             }
         }
 
+        // Returns the register's current value.
         int getValue() {
             return value;
         }
 
+        // Prints the register's current value to the console.
         void display() {
             cout << "Register value: " << (int)value << endl;
         }
 };
 
 // Member 1: Adam
+//
 class GeneralRegister : public Register {
     private:
         int id;
     public:
+        // Default constructor: creates a general register with id 0.
         GeneralRegister() : id(0) {}
+        // Creates a general register identified by id (e.g. 0 for R0).
         GeneralRegister(int id) : id(id) {}
+        // Returns this register's id (0-7, corresponding to R0-R7).
         int getID() {
             return id;
         }
@@ -53,6 +62,7 @@ class FlagRegister {
         int ZF;
 
     public:
+        // Initializes all flags (OF, UF, CF, ZF) to 0.
         FlagRegister() {
             OF = 0;
             UF = 0;
@@ -60,20 +70,30 @@ class FlagRegister {
             ZF = 0;
         }
 
+        // Sets the overflow flag.
         void setOF(int v) { OF = v; }
+        // Sets the underflow flag.
         void setUF(int v) { UF = v; }
+        // Sets the carry flag.
         void setCF(int v) { CF = v; }
+        // Sets the zero flag.
         void setZF(int v) { ZF = v; }
 
+        // Returns the overflow flag.
         int getOF() { return OF; }
+        // Returns the underflow flag.
         int getUF() { return UF; }
+        // Returns the carry flag.
         int getCF() { return CF; }
+        // Returns the zero flag.
         int getZF() { return ZF; }
 
+        // Prints all four flags to the console.
         void displayFlags() {
             cout << "OF=" << OF << " UF=" << UF << " CF=" << CF << " ZF=" << ZF << endl;
         }
 
+        // Resets all flags back to 0.
         void reset() {
             OF = 0;
             UF = 0;
@@ -88,18 +108,21 @@ class Memory {
         signed char data[64];
 
     public:
+        // Initializes all 64 memory bytes to 0.
         Memory() {
             for (int i = 0; i < 64; i++) {
                 data[i] = 0;
             }
         }
 
+        // Writes value to the given address if it is within bounds (0-63).
         void write(int address, int value) {
             if (address >= 0 && address <= 63) {
                 data[address] = value;
             }
         }
 
+        // Reads the value at the given address, or 0 if out of bounds.
         int read(int address) {
             if (address >= 0 && address <= 63) {
                 return data[address];
@@ -115,27 +138,32 @@ class Stack {
         int top;
 
     public:
+        // Initializes an empty stack (top = -1).
         Stack() : top(-1) {}
 
+        // Returns true if the stack has no elements.
         bool isEmpty() {
             return top == -1;
-        
+
         }
 
+        // Returns true if the stack has reached its 64-byte capacity.
         bool isFull() {
             return top == 63;
 
         }
 
+        // Pushes value onto the stack if it is not full.
         void push(int value) {
             if (!isFull()) {
                 top++;
                 data[top] = (signed char)value;
-            
+
             }
-            
+
         }
 
+        // Pops and returns the top value, or 0 if the stack is empty.
         int pop() {
             if (!isEmpty()) {
                 int val = data[top];
@@ -145,16 +173,18 @@ class Stack {
             return 0;
         }
 
+        // Returns the top value without removing it, or 0 if empty.
         int peek() {
             if (!isEmpty()) return data[top];
             return 0;
 
         }
 
+        // Returns the current top index.
         int getTop() {
             return top;
         }
-        
+
 };
 
 // Member 1: Adam
@@ -168,14 +198,22 @@ class CPU {
         unsigned char SI;
 
     public:
+        // Initializes the CPU with PC and SI both at 0.
         CPU() : PC(0), SI(0) {}
 
+        // Returns a reference to general register i (0-7).
         GeneralRegister& getRegister(int i) { return registers[i]; }
+        // Returns a reference to the CPU's flag register.
         FlagRegister& getFlags() { return flags; }
+        // Returns a reference to the CPU's memory.
         Memory& getMemory() { return memory; }
+        // Returns the current program counter.
         unsigned char getPC() { return PC; }
+        // Advances the program counter by one instruction.
         void incrementPC() { PC++; }
 
+        // Updates OF/UF/CF/ZF based on the unclamped result of an operation,
+        // so overflow/underflow is detected before the value gets clamped.
         void updateFlags(int rawResult) {
             flags.setOF(rawResult > 127 ? 1 : 0);
             flags.setUF(rawResult < -128 ? 1 : 0);
@@ -183,19 +221,23 @@ class CPU {
             flags.setZF(rawResult == 0 ? 1 : 0);
         }
 
+        // Returns the current stack index.
         unsigned char getSI() {return SI;}
 
+        // Pushes value onto the stack and increments the stack index.
         void pushStack(int value) {
             stack.push(value);
             SI++;
         }
 
+        // Pops the top of the stack and decrements the stack index.
         int popStack() {
             SI--;
             return stack.pop();
-        
+
         }
 
+        // Prints the full VM state (registers, flags, PC, memory) in the required output format.
         void displayState() {
             cout << "#Begin#" << endl;
 
@@ -211,7 +253,7 @@ class CPU {
                  << "#CF#" << flags.getCF()
                  << "#ZF#" << flags.getZF() << "#" << endl;
 
-            cout << "#PC#" << setfill('0') << setw(4) << hex 
+            cout << "#PC#" << setfill('0') << setw(4) << hex
                  << (int)PC << "#" << endl;
 
             cout << "#Memory#" << endl;
@@ -226,12 +268,14 @@ class CPU {
 
             cout << "#End#" << endl;
 
-            
-            
-            
+
+
+
         }
 };
 
+// Runs quick smoke tests for every Member 1 class (Register, GeneralRegister,
+// FlagRegister, Memory, Stack, CPU) and prints the results to the console.
 int main() {
 
     // Test Register
@@ -293,7 +337,7 @@ int main() {
     cpu2.getMemory().write(20, 68);
     cpu2.displayState();
 
-    
+
 
     return 0;
 }
