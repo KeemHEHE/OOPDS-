@@ -2,354 +2,306 @@
 #include <iomanip>
 using namespace std;
 
-// =======================
 // Member 1: Adam
-// =======================
 class Register {
-private:
-    signed char value;
-public:
-    Register() { value = 0; }
-    virtual ~Register() {}
-    void setValue(int n) {
-        if (n > 127) value = 127;
-        else if (n < -128) value = -128;
-        else value = n;
-    }
-    int getValue() { return value; }
-    void display() { cout << "Register value: " << (int)value << endl; }
-};
+    private:
+        signed char value;
 
-class GeneralRegister : public Register {
-private:
-    int id;
-public:
-    GeneralRegister() : id(0) {}
-    GeneralRegister(int id) : id(id) {}
-    int getID() { return id; }
-};
-
-class FlagRegister {
-private:
-    int OF, UF, CF, ZF;
-public:
-    FlagRegister() { OF=UF=CF=ZF=0; }
-    void setOF(int v) { OF=v; }
-    void setUF(int v) { UF=v; }
-    void setCF(int v) { CF=v; }
-    void setZF(int v) { ZF=v; }
-    int getOF() { return OF; }
-    int getUF() { return UF; }
-    int getCF() { return CF; }
-    int getZF() { return ZF; }
-    void displayFlags() {
-        cout << "OF="<<OF<<" UF="<<UF<<" CF="<<CF<<" ZF="<<ZF<<endl;
-    }
-    void reset() { OF=UF=CF=ZF=0; }
-};
-
-class Memory {
-private:
-    signed char data[64];
-public:
-    Memory() { for(int i=0;i<64;i++) data[i]=0; }
-    void write(int address,int value) {
-        if(address>=0 && address<=63) data[address]=value;
-    }
-    int read(int address) {
-        if(address>=0 && address<=63) return data[address];
-        return 0;
-    }
-};
-
-class Stack {
-private:
-    signed char data[64];
-    int top;
-public:
-    Stack(): top(-1) {}
-    bool isEmpty(){ return top==-1; }
-    bool isFull(){ return top==63; }
-    void push(int value){
-        if(!isFull()){ top++; data[top]=(signed char)value; }
-    }
-    int pop(){
-        if(!isEmpty()){ int val=data[top]; top--; return val; }
-        return 0;
-    }
-    int peek(){ return (!isEmpty())?data[top]:0; }
-    int getTop(){ return top; }
-};
-
-class CPU {
-private:
-    GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
-    Memory memory;
-    FlagRegister flags;
-    Stack stack;
-    unsigned char PC;
-    unsigned char SI;
-public:
-    CPU(): PC(0), SI(0) {}
-    GeneralRegister& getRegister(int i){ return registers[i]; }
-    FlagRegister& getFlags(){ return flags; }
-    Memory& getMemory(){ return memory; }
-    unsigned char getPC(){ return PC; }
-    void incrementPC(){ PC++; }
-    void updateFlags(int rawResult){
-        flags.setOF(rawResult>127?1:0);
-        flags.setUF(rawResult<-128?1:0);
-        flags.setCF((rawResult>127||rawResult<-128)?1:0);
-        flags.setZF(rawResult==0?1:0);
-    }
-    unsigned char getSI(){ return SI; }
-    void pushStack(int value){ stack.push(value); SI++; }
-    int popStack(){ SI--; return stack.pop(); }
-    void displayState(){
-        cout<<"#Begin#"<<endl;
-        cout<<"#Registers";
-        for(int i=0;i<8;i++){
-            cout<<"#"<<setfill('0')<<setw(4)<<hex<<(registers[i].getValue()&0xFF);
+    public:
+        // Initializes the register to 0.
+        Register() {
+            value = 0;
         }
-        cout<<"#"<<endl;
-        cout<<"#Flags#OF#"<<dec<<flags.getOF()
-            <<"#UF#"<<flags.getUF()
-            <<"#CF#"<<flags.getCF()
-            <<"#ZF#"<<flags.getZF()<<"#"<<endl;
-        cout<<"#PC#"<<setfill('0')<<setw(4)<<hex<<(int)PC<<"#"<<endl;
-        cout<<"#Memory#"<<endl;
-        for(int row=0;row<8;row++){
-            for(int col=0;col<8;col++){
-                cout<<"#"<<setfill('0')<<setw(4)<<hex<<(memory.read(row*8+col)&0xFF);
+        // Virtual destructor so derived registers destruct safely through a base pointer.
+        virtual ~Register() {}
+
+        // Sets the register's value, clamping it to the signed char range (-128 to 127).
+        void setValue(int n) {
+            if (n > 127) {
+                value = 127;
+            } else if (n < -128) {
+                value = -128;
+            } else {
+                value = n;
             }
-            cout<<"#"<<endl;
         }
-        cout<<"#End#"<<endl;
-    }
-};
 
-// =======================
-// Member 2: Adeeb
-// =======================
-
-
-template <typename T>
-class MyVector {
-private:
-    T* arr;
-    int capacity;
-    int count;
-
-    void resize() {
-        capacity = capacity * 2;
-        T* temp = new T[capacity];
-        for (int i = 0; i < count; i++) {
-            temp[i] = arr[i];
+        // Returns the register's current value.
+        int getValue() {
+            return value;
         }
-        delete[] arr;
-        arr = temp;
-    }
 
-public:
-    MyVector() {
-        capacity = 4;
-        count = 0;
-        arr = new T[capacity];
-    }
-    ~MyVector() {
-        delete[] arr;
-    }
-    void push_back(T value) {
-        if (count == capacity) {
-            resize();
+        // Prints the register's current value to the console.
+        void display() {
+            cout << "Register value: " << (int)value << endl;
         }
-        arr[count] = value;
-        count++;
-    }
-    T get(int index) {
-        return arr[index]; // caller is responsible for valid index (kept simple for this assignment)
-    }
-    int size() {
-        return count;
-    }
-    bool isEmpty() {
-        return count == 0;
-    }
 };
 
-
-// base class for all the instructions
-// every instruction MUST override execute()
-class Instruction {
-public:
-    virtual ~Instruction() {}  // need this or delete will be undefined behaviour (learned this the hard way lol)
-    virtual void execute(CPU &cpu) = 0;
-};
-
-class MovInstruction : public Instruction {
-private:
-    int dest;
-    int src;       // used when mode = MODE_REG (value is a register index)
-    int value;     // used when mode = MODE_IMM (value is the literal number)
-    int mode;
-public:
-    static const int MODE_IMM = 0;        // MOV Rdest, value
-    static const int MODE_REG = 1;        // MOV Rdest, Rsrc
-    static const int MODE_INDIRECT = 2;   // MOV Rdest, [Rsrc]
-
-    // constructor for immediate mode: MOV Rdest, value
-    MovInstruction(int d, int immVal, int m) {
-        dest = d;
-        value = immVal;
-        src = -1;
-        mode = m; // should be MODE_IMM
-    }
-    // constructor for register / indirect mode: MOV Rdest, Rsrc  or MOV Rdest, [Rsrc]
-    MovInstruction(int d, int s, bool isIndirect) {
-        dest = d;
-        src = s;
-        value = 0;
-        mode = isIndirect ? MODE_INDIRECT : MODE_REG;
-    }
-
-    void execute(CPU &cpu) {
-        int val;
-        if (mode == MODE_IMM) {
-            val = value; // straight number given in the instruction
-        } else if (mode == MODE_REG) {
-            val = cpu.getRegister(src).getValue(); // read src register
-        } else { // MODE_INDIRECT
-            int address = cpu.getRegister(src).getValue(); // src register holds an address
-            val = cpu.getMemory().read(address); // read memory at that address
+// Member 1: Adam
+//
+class GeneralRegister : public Register {
+    private:
+        int id;
+    public:
+        // Default constructor: creates a general register with id 0.
+        GeneralRegister() : id(0) {}
+        // Creates a general register identified by id (e.g. 0 for R0).
+        GeneralRegister(int id) : id(id) {}
+        // Returns this register's id (0-7, corresponding to R0-R7).
+        int getID() {
+            return id;
         }
-        cpu.getRegister(dest).setValue(val);
-        cpu.updateFlags(val);
-        cpu.incrementPC();
-    }
 };
 
+// Member 1: Adam
+class FlagRegister {
+    private:
+        int OF;
+        int UF;
+        int CF;
+        int ZF;
 
-// ADD Rdest, Rsrc
-// dest = dest + src
-class AddInstruction : public Instruction {
-private:
-    int dest,src;
-public:
-    AddInstruction(int d, int s){
-        dest=d;
-        src=s;
-    }
-    void execute(CPU &cpu){
-        int res = cpu.getRegister(dest).getValue() + cpu.getRegister(src).getValue();
-        cpu.getRegister(dest).setValue(res);
-        cpu.updateFlags(res); // update overflow/zero flag based on raw result
-        cpu.incrementPC();
-    }
-};
-
-
-// SUB Rdest, Rsrc
-// dest = dest - src
-class SubInstruction : public Instruction {
-private:
-    int dest, src;
-public:
-    SubInstruction(int d, int s) { dest = d; src = s; }
-    void execute(CPU &cpu) {
-        int res = cpu.getRegister(dest).getValue() - cpu.getRegister(src).getValue();
-        cpu.getRegister(dest).setValue(res);
-        cpu.updateFlags(res);
-        cpu.incrementPC();
-    }
-};
-
-// MUL Rdest, Rsrc
-// dest = dest * src
-class MulInstruction : public Instruction {
-private:
-    int dest, src;
-public:
-    MulInstruction(int d, int s) { dest = d; src = s; }
-    void execute(CPU &cpu) {
-        int res = cpu.getRegister(dest).getValue() * cpu.getRegister(src).getValue();
-        cpu.getRegister(dest).setValue(res);
-        cpu.updateFlags(res);
-        cpu.incrementPC();
-    }
-};
-
-class DivInstruction : public Instruction {
-private:
-    int dest, src;
-public:
-    DivInstruction(int d, int s) { dest = d; src = s; }
-    void execute(CPU &cpu) {
-        int srcVal = cpu.getRegister(src).getValue();
-        if (srcVal != 0) {
-            int res = cpu.getRegister(dest).getValue() / srcVal;
-            cpu.getRegister(dest).setValue(res);
-            cpu.updateFlags(res);
+    public:
+        // Initializes all flags (OF, UF, CF, ZF) to 0.
+        FlagRegister() {
+            OF = 0;
+            UF = 0;
+            CF = 0;
+            ZF = 0;
         }
-        // if srcVal == 0 we still move on to next instruction, just dont touch dest
-        cpu.incrementPC();
-    }
+
+        // Sets the overflow flag.
+        void setOF(int v) { OF = v; }
+        // Sets the underflow flag.
+        void setUF(int v) { UF = v; }
+        // Sets the carry flag.
+        void setCF(int v) { CF = v; }
+        // Sets the zero flag.
+        void setZF(int v) { ZF = v; }
+
+        // Returns the overflow flag.
+        int getOF() { return OF; }
+        // Returns the underflow flag.
+        int getUF() { return UF; }
+        // Returns the carry flag.
+        int getCF() { return CF; }
+        // Returns the zero flag.
+        int getZF() { return ZF; }
+
+        // Prints all four flags to the console.
+        void displayFlags() {
+            cout << "OF=" << OF << " UF=" << UF << " CF=" << CF << " ZF=" << ZF << endl;
+        }
+
+        // Resets all flags back to 0.
+        void reset() {
+            OF = 0;
+            UF = 0;
+            CF = 0;
+            ZF = 0;
+        }
 };
 
-// INC Rdest
-// dest = dest + 1
-class IncInstruction : public Instruction {
-private:
-    int dest;
-public:
-    IncInstruction(int d) { dest = d; }
-    void execute(CPU &cpu) {
-        int res = cpu.getRegister(dest).getValue() + 1;
-        cpu.getRegister(dest).setValue(res);
-        cpu.updateFlags(res);
-        cpu.incrementPC();
-    }
+// Member 1: Adam
+class Memory {
+    private:
+        signed char data[64];
+
+    public:
+        // Initializes all 64 memory bytes to 0.
+        Memory() {
+            for (int i = 0; i < 64; i++) {
+                data[i] = 0;
+            }
+        }
+
+        // Writes value to the given address if it is within bounds (0-63).
+        void write(int address, int value) {
+            if (address >= 0 && address <= 63) {
+                data[address] = value;
+            }
+        }
+
+        // Reads the value at the given address, or 0 if out of bounds.
+        int read(int address) {
+            if (address >= 0 && address <= 63) {
+                return data[address];
+            }
+            return 0;
+        }
 };
 
-// DEC Rdest
-// dest = dest - 1
-class DecInstruction : public Instruction {
-private:
-    int dest;
-public:
-    DecInstruction(int d) { dest = d; }
-    void execute(CPU &cpu) {
-        int res = cpu.getRegister(dest).getValue() - 1;
-        cpu.getRegister(dest).setValue(res);
-        cpu.updateFlags(res);
-        cpu.incrementPC();
-    }
+// Member 1: Adam
+class Stack {
+    private:
+        signed char data [64];
+        int top;
+
+    public:
+        // Initializes an empty stack (top = -1).
+        Stack() : top(-1) {}
+
+        // Returns true if the stack has no elements.
+        bool isEmpty() {
+            return top == -1;
+
+        }
+
+        // Returns true if the stack has reached its 64-byte capacity.
+        bool isFull() {
+            return top == 63;
+
+        }
+
+        // Pushes value onto the stack if it is not full.
+        void push(int value) {
+            if (!isFull()) {
+                top++;
+                data[top] = (signed char)value;
+
+            }
+
+        }
+
+        // Pops and returns the top value, or 0 if the stack is empty.
+        int pop() {
+            if (!isEmpty()) {
+                int val = data[top];
+                top--;
+                return val;
+            }
+            return 0;
+        }
+
+        // Returns the top value without removing it, or 0 if empty.
+        int peek() {
+            if (!isEmpty()) return data[top];
+            return 0;
+
+        }
+
+        // Returns the current top index.
+        int getTop() {
+            return top;
+        }
+
 };
 
-// =======================
-// Main
-// =======================
-int main(){
-    // ===Register Tests===
+// Member 1: Adam
+class CPU {
+    private:
+        GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
+        Memory memory;
+        FlagRegister flags;
+        Stack stack;
+        unsigned char PC;
+        unsigned char SI;
+
+    public:
+        // Initializes the CPU with PC and SI both at 0.
+        CPU() : PC(0), SI(0) {}
+
+        // Returns a reference to general register i (0-7).
+        GeneralRegister& getRegister(int i) { return registers[i]; }
+        // Returns a reference to the CPU's flag register.
+        FlagRegister& getFlags() { return flags; }
+        // Returns a reference to the CPU's memory.
+        Memory& getMemory() { return memory; }
+        // Returns the current program counter.
+        unsigned char getPC() { return PC; }
+        // Advances the program counter by one instruction.
+        void incrementPC() { PC++; }
+
+        // Updates OF/UF/CF/ZF based on the unclamped result of an operation,
+        // so overflow/underflow is detected before the value gets clamped.
+        void updateFlags(int rawResult) {
+            flags.setOF(rawResult > 127 ? 1 : 0);
+            flags.setUF(rawResult < -128 ? 1 : 0);
+            flags.setCF((rawResult > 127 || rawResult < -128)? 1 : 0);
+            flags.setZF(rawResult == 0 ? 1 : 0);
+        }
+
+        // Returns the current stack index.
+        unsigned char getSI() {return SI;}
+
+        // Pushes value onto the stack and increments the stack index.
+        void pushStack(int value) {
+            stack.push(value);
+            SI++;
+        }
+
+        // Pops the top of the stack and decrements the stack index.
+        int popStack() {
+            SI--;
+            return stack.pop();
+
+        }
+
+        // Prints the full VM state (registers, flags, PC, memory) in the required output format.
+        void displayState() {
+            cout << "#Begin#" << endl;
+
+            cout << "#Registers";
+            for (int i = 0; i < 8; i++) {
+                cout << "#" << setfill('0') << setw(4) << hex
+                     << (registers[i].getValue() & 0xFF);
+            }
+            cout << "#" << endl;
+
+            cout << "#Flags#OF#" << dec << flags.getOF()
+                 << "#UF#" << flags.getUF()
+                 << "#CF#" << flags.getCF()
+                 << "#ZF#" << flags.getZF() << "#" << endl;
+
+            cout << "#PC#" << setfill('0') << setw(4) << hex
+                 << (int)PC << "#" << endl;
+
+            cout << "#Memory#" << endl;
+            for (int row = 0; row < 8; row++){
+                for(int col = 0; col < 8; col++) {
+                    cout << "#" << setfill('0') << setw(4) << hex
+                        <<(memory.read(row * 8 + col) & 0xFF);
+
+                }
+                cout << "#" << endl;
+            }
+
+            cout << "#End#" << endl;
+
+
+
+
+        }
+};
+
+// Runs quick smoke tests for every Member 1 class (Register, GeneralRegister,
+// FlagRegister, Memory, Stack, CPU) and prints the results to the console.
+int main() {
+
+    // Test Register
+    cout << "===Register Tests===" << endl;
     Register R0;
     R0.setValue(50);
-    cout<<"R0 value: "<<R0.getValue()<<endl;
+    cout << "R0 value: " << R0.getValue() << endl;
     R0.setValue(200);
-    cout<<"R0 max clamp: "<<R0.getValue()<<endl;
+    cout << "R0 max clamp: " << R0.getValue() << endl;
     R0.setValue(-200);
-    cout<<"R0 min clamp: "<<R0.getValue()<<endl;
+    cout << "R0 min clamp: " << R0.getValue() << endl;
     R0.setValue(42);
     R0.display();
 
-    // ===GeneralRegister Tests===
+    // Test GeneralRegister array
+    cout << "\n===GeneralRegister Tests===" << endl;
     GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
     registers[0].setValue(5);
     registers[1].setValue(10);
     registers[3].setValue(200);
-    for(int i=0;i<8;i++){
-        cout<<"R"<<i<<" = "<<registers[i].getValue()<<endl;
+    for (int i = 0; i < 8; i++) {
+        cout << "R" << i << " = " << registers[i].getValue() << endl;
     }
 
-    // ===FlagRegister Tests===
+    // Test FlagRegister
+    cout << "\n===FlagRegister Tests===" << endl;
     FlagRegister flags;
     flags.displayFlags();
     flags.setOF(1);
@@ -358,139 +310,34 @@ int main(){
     flags.setZF(1);
     flags.displayFlags();
 
-    // ===Memory Tests===
+    // Test Memory
+    cout << "\n===Memory Tests===" << endl;
     Memory mem;
-    mem.write(10,99);
-    cout<<"mem[10] = "<<mem.read(10)<<endl;
-    cout<<"mem[0]  = "<<mem.read(0)<<endl;
+    mem.write(10, 99);
+    cout << "mem[10] = " << mem.read(10) << endl;
+    cout << "mem[0]  = " << mem.read(0) << endl;
 
-    // ===CPU Tests===
+    // Test CPU
+    cout << "\n===CPU Tests===" << endl;
     CPU cpu;
     cpu.getRegister(0).setValue(77);
-    cout<<"CPU R0 = "<<cpu.getRegister(0).getValue()<<endl;
-    cpu.getMemory().write(5,33);
-    cout<<"CPU mem[5] = "<<cpu.getMemory().read(5)<<endl;
+    cout << "CPU R0 = " << cpu.getRegister(0).getValue() << endl;
+    cpu.getMemory().write(5, 33);
+    cout << "CPU mem[5] = " << cpu.getMemory().read(5) << endl;
     cpu.incrementPC();
-    cout<<"CPU PC = "<<(int)cpu.getPC()<<endl;
+    cout << "CPU PC = " << (int)cpu.getPC() << endl;
 
-    // ===displayState Test===
+    // Test displayState
+    cout << "\n===displayState Test===" << endl;
     CPU cpu2;
     cpu2.getRegister(1).setValue(17);
     cpu2.getRegister(3).setValue(68);
     cpu2.incrementPC();
     cpu2.incrementPC();
-    cpu2.getMemory().write(20,68);
+    cpu2.getMemory().write(20, 68);
     cpu2.displayState();
 
-    // ===Instruction Tests (Adeeb)===
-    cout<<dec; //displayState uses hex so gotta switch back to normal numbers here
-    cout<<"\n===Instruction Tests==="<<endl;
-    CPU cpu3;
-    cpu3.getRegister(1).setValue(10);
 
-    // --- quick individual tests first (same as before) ---
-
-    // test MOV register-to-register mode
-    Instruction* movReg = new MovInstruction(0,1,false); // MOV R0, R1
-    movReg->execute(cpu3);
-    cout<<"R0 after MOV R0,R1: "<<cpu3.getRegister(0).getValue()<<endl;
-
-    // test MOV immediate mode
-    Instruction* movImm = new MovInstruction(4, 99, MovInstruction::MODE_IMM); // MOV R4, 99
-    movImm->execute(cpu3);
-    cout<<"R4 after MOV R4,99: "<<cpu3.getRegister(4).getValue()<<endl;
-
-    // test MOV register-indirect mode
-    cpu3.getMemory().write(30, 55); // put 55 at memory address 30
-    cpu3.getRegister(5).setValue(30); // R5 holds the address 30
-    Instruction* movInd = new MovInstruction(6,5,true); // MOV R6, [R5]
-    movInd->execute(cpu3);
-    cout<<"R6 after MOV R6,[R5]: "<<cpu3.getRegister(6).getValue()<<endl;
-
-    // test ADD
-    Instruction* add = new AddInstruction(0,1); // ADD R0,R1
-    add->execute(cpu3);
-    cout<<"R0 after ADD: "<<cpu3.getRegister(0).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // test SUB
-    Instruction* sub = new SubInstruction(0,1); // SUB R0,R1
-    sub->execute(cpu3);
-    cout<<"R0 after SUB: "<<cpu3.getRegister(0).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // test MUL
-    cpu3.getRegister(0).setValue(5);
-    cpu3.getRegister(1).setValue(6);
-    Instruction* mul = new MulInstruction(0,1); // MUL R0,R1
-    mul->execute(cpu3);
-    cout<<"R0 after MUL: "<<cpu3.getRegister(0).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // test DIV normal case
-    cpu3.getRegister(0).setValue(20);
-    cpu3.getRegister(1).setValue(4);
-    Instruction* div1 = new DivInstruction(0,1); // DIV R0,R1 -> 20/4
-    div1->execute(cpu3);
-    cout<<"R0 after DIV (20/4): "<<cpu3.getRegister(0).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // test DIV by zero (should not crash, dest stays same)
-    cpu3.getRegister(0).setValue(20);
-    cpu3.getRegister(1).setValue(0);
-    Instruction* div2 = new DivInstruction(0,1);
-    div2->execute(cpu3);
-    cout<<"R0 after DIV by zero (unchanged): "<<cpu3.getRegister(0).getValue()<<endl;
-
-    // test INC
-    cpu3.getRegister(2).setValue(9);
-    Instruction* inc = new IncInstruction(2); // INC R2
-    inc->execute(cpu3);
-    cout<<"R2 after INC: "<<cpu3.getRegister(2).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // test DEC
-    cpu3.getRegister(2).setValue(0);
-    Instruction* dec = new DecInstruction(2); // DEC R2
-    dec->execute(cpu3);
-    cout<<"R2 after DEC: "<<cpu3.getRegister(2).getValue()<<endl;
-    cpu3.getFlags().displayFlags();
-
-    // cleanup individual test pointers
-    delete movReg;
-    delete movImm;
-    delete movInd;
-    delete add;
-    delete sub;
-    delete mul;
-    delete div1;
-    delete div2;
-    delete inc;
-    delete dec;
-
-    cout<<"\n===Polymorphism Demo (MyVector<Instruction*>)==="<<endl;
-    CPU cpu4;
-
-    MyVector<Instruction*> program; // our custom vector, not STL vector
-    program.push_back(new MovInstruction(1, 5, MovInstruction::MODE_IMM)); // MOV R1, 5
-    program.push_back(new AddInstruction(1, 1));                          // ADD R1, R1 (R1=R1+R1)
-    program.push_back(new MovInstruction(3, 1, false));                   // MOV R3, R1
-    program.push_back(new MulInstruction(3, 1));                          // MUL R3, R1
-    program.push_back(new IncInstruction(3));                             // INC R3
-    program.push_back(new DecInstruction(1));                             // DEC R1
-
-    for (int i = 0; i < program.size(); i++) {
-        Instruction* instr = program.get(i); // base class pointer
-        instr->execute(cpu4);                // virtual dispatch happens here
-        cout<<"after instruction "<<i<<" -> R1="<<cpu4.getRegister(1).getValue()
-            <<" R3="<<cpu4.getRegister(3).getValue()
-            <<" PC="<<(int)cpu4.getPC()<<endl;
-    }
-
-    // cleanup the program vector
-    for (int i = 0; i < program.size(); i++) {
-        delete program.get(i);
-    }
 
     return 0;
 }
