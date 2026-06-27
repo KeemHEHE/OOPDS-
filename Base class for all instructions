@@ -132,37 +132,128 @@ public:
 // Member 2: Adeeb
 // =======================
 
-// Base class
+// base class for all the instructions
+// every instruction MUST override execute()
 class Instruction {
 public:
-    virtual ~Instruction(){}
-    virtual void execute(CPU &cpu)=0;
+    virtual ~Instruction() {}  // need this or delete will be undefined behaviour (learned this the hard way lol)
+    virtual void execute(CPU &cpu) = 0;
 };
 
 // MOV Rdest, Rsrc
-class MovInstruction: public Instruction {
+// copies value from src register into dest register
+class MovInstruction : public Instruction {
 private:
     int dest, src;
 public:
-    MovInstruction(int d,int s): dest(d), src(s){}
-    void execute(CPU &cpu) override {
-        int value=cpu.getRegister(src).getValue();
-        cpu.getRegister(dest).setValue(value);
-        cpu.updateFlags(value);
+    MovInstruction(int d, int s) {
+        dest = d;
+        src = s;
+    }
+    void execute(CPU &cpu) {
+        int val = cpu.getRegister(src).getValue(); // read src
+        cpu.getRegister(dest).setValue(val); // write into dest
+        cpu.updateFlags(val);
         cpu.incrementPC();
     }
 };
 
+
 // ADD Rdest, Rsrc
-class AddInstruction: public Instruction {
+// dest = dest + src
+class AddInstruction : public Instruction {
+private:
+    int dest,src;
+public:
+    AddInstruction(int d, int s){
+        dest=d;
+        src=s;
+    }
+    void execute(CPU &cpu){
+        int res = cpu.getRegister(dest).getValue() + cpu.getRegister(src).getValue();
+        cpu.getRegister(dest).setValue(res);
+        cpu.updateFlags(res); // update overflow/zero flag based on raw result
+        cpu.incrementPC();
+    }
+};
+
+
+// SUB Rdest, Rsrc
+// dest = dest - src
+class SubInstruction : public Instruction {
 private:
     int dest, src;
 public:
-    AddInstruction(int d,int s): dest(d), src(s){}
-    void execute(CPU &cpu) override {
-        int result=cpu.getRegister(dest).getValue()+cpu.getRegister(src).getValue();
-        cpu.getRegister(dest).setValue(result);
-        cpu.updateFlags(result);
+    SubInstruction(int d, int s) { dest = d; src = s; }
+    void execute(CPU &cpu) {
+        int res = cpu.getRegister(dest).getValue() - cpu.getRegister(src).getValue();
+        cpu.getRegister(dest).setValue(res);
+        cpu.updateFlags(res);
+        cpu.incrementPC();
+    }
+};
+
+// MUL Rdest, Rsrc
+// dest = dest * src
+class MulInstruction : public Instruction {
+private:
+    int dest, src;
+public:
+    MulInstruction(int d, int s) { dest = d; src = s; }
+    void execute(CPU &cpu) {
+        int res = cpu.getRegister(dest).getValue() * cpu.getRegister(src).getValue();
+        cpu.getRegister(dest).setValue(res);
+        cpu.updateFlags(res);
+        cpu.incrementPC();
+    }
+};
+
+// DIV Rdest, Rsrc
+// dest = dest / src
+// note: if src is 0 we just skip the divide so program doesnt crash
+class DivInstruction : public Instruction {
+private:
+    int dest, src;
+public:
+    DivInstruction(int d, int s) { dest = d; src = s; }
+    void execute(CPU &cpu) {
+        int srcVal = cpu.getRegister(src).getValue();
+        if (srcVal != 0) {
+            int res = cpu.getRegister(dest).getValue() / srcVal;
+            cpu.getRegister(dest).setValue(res);
+            cpu.updateFlags(res);
+        }
+        // if srcVal == 0 we still move on to next instruction, just dont touch dest
+        cpu.incrementPC();
+    }
+};
+
+// INC Rdest
+// dest = dest + 1
+class IncInstruction : public Instruction {
+private:
+    int dest;
+public:
+    IncInstruction(int d) { dest = d; }
+    void execute(CPU &cpu) {
+        int res = cpu.getRegister(dest).getValue() + 1;
+        cpu.getRegister(dest).setValue(res);
+        cpu.updateFlags(res);
+        cpu.incrementPC();
+    }
+};
+
+// DEC Rdest
+// dest = dest - 1
+class DecInstruction : public Instruction {
+private:
+    int dest;
+public:
+    DecInstruction(int d) { dest = d; }
+    void execute(CPU &cpu) {
+        int res = cpu.getRegister(dest).getValue() - 1;
+        cpu.getRegister(dest).setValue(res);
+        cpu.updateFlags(res);
         cpu.incrementPC();
     }
 };
@@ -225,22 +316,74 @@ int main(){
     cpu2.displayState();
 
     // ===Instruction Tests (Adeeb)===
+    cout<<dec; //displayState uses hex so gotta switch back to normal numbers here
     cout<<"\n===Instruction Tests==="<<endl;
     CPU cpu3;
     cpu3.getRegister(1).setValue(10);
 
-    Instruction* mov=new MovInstruction(0,1); // MOV R0,R1
+    // test MOV
+    Instruction* mov = new MovInstruction(0,1); // MOV R0,R1
     mov->execute(cpu3);
     cout<<"R0 after MOV: "<<cpu3.getRegister(0).getValue()<<endl;
 
-    Instruction* add=new AddInstruction(0,1); // ADD R0,R1
+    // test ADD
+    Instruction* add = new AddInstruction(0,1); // ADD R0,R1
     add->execute(cpu3);
     cout<<"R0 after ADD: "<<cpu3.getRegister(0).getValue()<<endl;
-
     cpu3.getFlags().displayFlags();
 
+    // test SUB
+    Instruction* sub = new SubInstruction(0,1); // SUB R0,R1
+    sub->execute(cpu3);
+    cout<<"R0 after SUB: "<<cpu3.getRegister(0).getValue()<<endl;
+    cpu3.getFlags().displayFlags();
+
+    // test MUL
+    cpu3.getRegister(0).setValue(5);
+    cpu3.getRegister(1).setValue(6);
+    Instruction* mul = new MulInstruction(0,1); // MUL R0,R1
+    mul->execute(cpu3);
+    cout<<"R0 after MUL: "<<cpu3.getRegister(0).getValue()<<endl;
+    cpu3.getFlags().displayFlags();
+
+    // test DIV normal case
+    cpu3.getRegister(0).setValue(20);
+    cpu3.getRegister(1).setValue(4);
+    Instruction* div1 = new DivInstruction(0,1); // DIV R0,R1 -> 20/4
+    div1->execute(cpu3);
+    cout<<"R0 after DIV (20/4): "<<cpu3.getRegister(0).getValue()<<endl;
+    cpu3.getFlags().displayFlags();
+
+    // test DIV by zero (should not crash, dest stays same)
+    cpu3.getRegister(0).setValue(20);
+    cpu3.getRegister(1).setValue(0);
+    Instruction* div2 = new DivInstruction(0,1);
+    div2->execute(cpu3);
+    cout<<"R0 after DIV by zero (unchanged): "<<cpu3.getRegister(0).getValue()<<endl;
+
+    // test INC
+    cpu3.getRegister(2).setValue(9);
+    Instruction* inc = new IncInstruction(2); // INC R2
+    inc->execute(cpu3);
+    cout<<"R2 after INC: "<<cpu3.getRegister(2).getValue()<<endl;
+    cpu3.getFlags().displayFlags();
+
+    // test DEC
+    cpu3.getRegister(2).setValue(0);
+    Instruction* dec = new DecInstruction(2); // DEC R2
+    dec->execute(cpu3);
+    cout<<"R2 after DEC: "<<cpu3.getRegister(2).getValue()<<endl;
+    cpu3.getFlags().displayFlags();
+
+    // cleanup
     delete mov;
     delete add;
+    delete sub;
+    delete mul;
+    delete div1;
+    delete div2;
+    delete inc;
+    delete dec;
 
     return 0;
 }
