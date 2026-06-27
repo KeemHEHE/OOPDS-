@@ -132,6 +132,52 @@ public:
 // Member 2: Adeeb
 // =======================
 
+
+template <typename T>
+class MyVector {
+private:
+    T* arr;
+    int capacity;
+    int count;
+
+    void resize() {
+        capacity = capacity * 2;
+        T* temp = new T[capacity];
+        for (int i = 0; i < count; i++) {
+            temp[i] = arr[i];
+        }
+        delete[] arr;
+        arr = temp;
+    }
+
+public:
+    MyVector() {
+        capacity = 4;
+        count = 0;
+        arr = new T[capacity];
+    }
+    ~MyVector() {
+        delete[] arr;
+    }
+    void push_back(T value) {
+        if (count == capacity) {
+            resize();
+        }
+        arr[count] = value;
+        count++;
+    }
+    T get(int index) {
+        return arr[index]; // caller is responsible for valid index (kept simple for this assignment)
+    }
+    int size() {
+        return count;
+    }
+    bool isEmpty() {
+        return count == 0;
+    }
+};
+
+
 // base class for all the instructions
 // every instruction MUST override execute()
 class Instruction {
@@ -140,19 +186,43 @@ public:
     virtual void execute(CPU &cpu) = 0;
 };
 
-// MOV Rdest, Rsrc
-// copies value from src register into dest register
 class MovInstruction : public Instruction {
 private:
-    int dest, src;
+    int dest;
+    int src;       // used when mode = MODE_REG (value is a register index)
+    int value;     // used when mode = MODE_IMM (value is the literal number)
+    int mode;
 public:
-    MovInstruction(int d, int s) {
+    static const int MODE_IMM = 0;        // MOV Rdest, value
+    static const int MODE_REG = 1;        // MOV Rdest, Rsrc
+    static const int MODE_INDIRECT = 2;   // MOV Rdest, [Rsrc]
+
+    // constructor for immediate mode: MOV Rdest, value
+    MovInstruction(int d, int immVal, int m) {
+        dest = d;
+        value = immVal;
+        src = -1;
+        mode = m; // should be MODE_IMM
+    }
+    // constructor for register / indirect mode: MOV Rdest, Rsrc  or MOV Rdest, [Rsrc]
+    MovInstruction(int d, int s, bool isIndirect) {
         dest = d;
         src = s;
+        value = 0;
+        mode = isIndirect ? MODE_INDIRECT : MODE_REG;
     }
+
     void execute(CPU &cpu) {
-        int val = cpu.getRegister(src).getValue(); // read src
-        cpu.getRegister(dest).setValue(val); // write into dest
+        int val;
+        if (mode == MODE_IMM) {
+            val = value; // straight number given in the instruction
+        } else if (mode == MODE_REG) {
+            val = cpu.getRegister(src).getValue(); // read src register
+        } else { // MODE_INDIRECT
+            int address = cpu.getRegister(src).getValue(); // src register holds an address
+            val = cpu.getMemory().read(address); // read memory at that address
+        }
+        cpu.getRegister(dest).setValue(val);
         cpu.updateFlags(val);
         cpu.incrementPC();
     }
@@ -208,9 +278,6 @@ public:
     }
 };
 
-// DIV Rdest, Rsrc
-// dest = dest / src
-// note: if src is 0 we just skip the divide so program doesnt crash
 class DivInstruction : public Instruction {
 private:
     int dest, src;
@@ -321,10 +388,24 @@ int main(){
     CPU cpu3;
     cpu3.getRegister(1).setValue(10);
 
-    // test MOV
-    Instruction* mov = new MovInstruction(0,1); // MOV R0,R1
-    mov->execute(cpu3);
-    cout<<"R0 after MOV: "<<cpu3.getRegister(0).getValue()<<endl;
+    // --- quick individual tests first (same as before) ---
+
+    // test MOV register-to-register mode
+    Instruction* movReg = new MovInstruction(0,1,false); // MOV R0, R1
+    movReg->execute(cpu3);
+    cout<<"R0 after MOV R0,R1: "<<cpu3.getRegister(0).getValue()<<endl;
+
+    // test MOV immediate mode
+    Instruction* movImm = new MovInstruction(4, 99, MovInstruction::MODE_IMM); // MOV R4, 99
+    movImm->execute(cpu3);
+    cout<<"R4 after MOV R4,99: "<<cpu3.getRegister(4).getValue()<<endl;
+
+    // test MOV register-indirect mode
+    cpu3.getMemory().write(30, 55); // put 55 at memory address 30
+    cpu3.getRegister(5).setValue(30); // R5 holds the address 30
+    Instruction* movInd = new MovInstruction(6,5,true); // MOV R6, [R5]
+    movInd->execute(cpu3);
+    cout<<"R6 after MOV R6,[R5]: "<<cpu3.getRegister(6).getValue()<<endl;
 
     // test ADD
     Instruction* add = new AddInstruction(0,1); // ADD R0,R1
@@ -375,8 +456,10 @@ int main(){
     cout<<"R2 after DEC: "<<cpu3.getRegister(2).getValue()<<endl;
     cpu3.getFlags().displayFlags();
 
-    // cleanup
-    delete mov;
+    // cleanup individual test pointers
+    delete movReg;
+    delete movImm;
+    delete movInd;
     delete add;
     delete sub;
     delete mul;
@@ -384,6 +467,30 @@ int main(){
     delete div2;
     delete inc;
     delete dec;
+
+    cout<<"\n===Polymorphism Demo (MyVector<Instruction*>)==="<<endl;
+    CPU cpu4;
+
+    MyVector<Instruction*> program; // our custom vector, not STL vector
+    program.push_back(new MovInstruction(1, 5, MovInstruction::MODE_IMM)); // MOV R1, 5
+    program.push_back(new AddInstruction(1, 1));                          // ADD R1, R1 (R1=R1+R1)
+    program.push_back(new MovInstruction(3, 1, false));                   // MOV R3, R1
+    program.push_back(new MulInstruction(3, 1));                          // MUL R3, R1
+    program.push_back(new IncInstruction(3));                             // INC R3
+    program.push_back(new DecInstruction(1));                             // DEC R1
+
+    for (int i = 0; i < program.size(); i++) {
+        Instruction* instr = program.get(i); // base class pointer
+        instr->execute(cpu4);                // virtual dispatch happens here
+        cout<<"after instruction "<<i<<" -> R1="<<cpu4.getRegister(1).getValue()
+            <<" R3="<<cpu4.getRegister(3).getValue()
+            <<" PC="<<(int)cpu4.getPC()<<endl;
+    }
+
+    // cleanup the program vector
+    for (int i = 0; i < program.size(); i++) {
+        delete program.get(i);
+    }
 
     return 0;
 }
