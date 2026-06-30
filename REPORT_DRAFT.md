@@ -6,7 +6,7 @@
 **Members:**
 | Name | Student ID | Contribution |
 |------|-----------|--------------|
-| Adam | [FILL IN] | Register, GeneralRegister, FlagRegister, Memory, Stack, CPU (core architecture); integration of all members' work; RESET/PUSH/POP |
+| Adam | 252UC242PM | Register, GeneralRegister, FlagRegister, Memory, Stack, CPU (core architecture); integration of all members' work; RESET/PUSH/POP |
 | Adeeb | [FILL IN] | Instruction abstract base, custom Vector (`MyVector`), MOV, ADD, SUB, MUL, DIV, INC, DEC |
 | Ammar | [FILL IN] | Custom Queue (`MyQueue`), LOAD, STORE, ROL, ROR, SHL, SHR, INPUT, DISPLAY, Runner |
 
