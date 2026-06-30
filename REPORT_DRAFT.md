@@ -208,6 +208,10 @@ classDiagram
 
 **Activity diagram — `loadProgram()`:**
 
+![loadProgram activity diagram](screenshots/activity-loadprogram.png)
+
+Mermaid source (kept for reference / re-rendering if needed):
+
 ```mermaid
 flowchart TD
     A([Start: loadProgram]) --> B[Open .asm file]
@@ -235,6 +239,10 @@ flowchart TD
 `Runner::run()` then dequeues and executes instructions in FIFO order until the queue is empty: `instr->execute(cpu)` (virtual dispatch — this is where polymorphism happens), then deletes the instruction. After the loop (or after every instruction, in `--step` mode), `cpu.displayState()` prints the VM state to both the screen and `output.txt`.
 
 **Activity diagram — `run()`:**
+
+![run activity diagram](screenshots/activity-run.png)
+
+Mermaid source (kept for reference / re-rendering if needed):
 
 ```mermaid
 flowchart TD
@@ -269,6 +277,10 @@ void updateFlags(int rawResult) {
 Every `Instruction::execute()` that changes a destination register's value calls this with the raw (unclamped) result, then calls `setValue()` on the register, which performs the actual clamping. Per spec section 3.10's general rule ("flags should be updated after each operation that changes the value of a destination register"), this applies broadly — not just to ADD/SUB/MUL/DIV/INC/DEC, but also MOV, LOAD, ROL/ROR/SHL/SHR, and POP (all of which write a new value into a register). `PUSH` does **not** update flags, since it doesn't change any register.
 
 **Activity diagram — generic `Instruction::execute()` pattern (e.g. `AddInstruction`):**
+
+![execute activity diagram](screenshots/activity-execute.png)
+
+Mermaid source (kept for reference / re-rendering if needed):
 
 ```mermaid
 flowchart TD
@@ -433,7 +445,7 @@ This assignment provided practical experience applying encapsulation, inheritanc
 - [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
 - [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
 - [x] Class diagram (§2.3) rendered and embedded — fix the "ShiInstruction" → "ShlInstruction" typo and re-export first.
-- [ ] Render the 3 activity diagrams (§3.1/§3.2) as images at mermaid.live or draw.io and embed them the same way.
+- [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
 - [ ] Capture screenshots for §4.2–4.4 (compiling and running each example program).
 - [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
 - [ ] Capture a flag-overflow screenshot for §3.2.
