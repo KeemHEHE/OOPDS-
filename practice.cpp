@@ -197,15 +197,16 @@ class Stack {
 class CPU {
     private:
         GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
-        Memory memory;
-        FlagRegister flags;
+        Memory memory;       // composition: CPU owns and destroys this Memory
+        FlagRegister &flags; // aggregation: CPU uses a FlagRegister it doesn't own or
+                              // create -- it's passed in and can outlive/exist apart from this CPU
         Stack stack;
         unsigned char PC;
         unsigned char SI;
 
     public:
-        // Initializes the CPU with PC and SI both at 0.
-        CPU() : PC(0), SI(0) {}
+        // Initializes the CPU with PC and SI both at 0, aggregating an externally-owned FlagRegister.
+        CPU(FlagRegister &fr) : flags(fr), PC(0), SI(0) {}
 
         // Returns a reference to general register i (0-7).
         GeneralRegister& getRegister(int i) { return registers[i]; }
@@ -888,8 +889,12 @@ static Instruction* parseLine(const string &rawLine) {
 class Runner {
     private:
         MyQueue instrQueue;
+        FlagRegister flags; // owned here, aggregated by cpu below (declared after, per init order)
         CPU cpu;
     public:
+        // Constructs cpu aggregating this Runner's FlagRegister.
+        Runner() : cpu(flags) {}
+
         // Reads filename into a MyVector<string> (one element per line, per spec), then
         // parses each stored line into an Instruction and enqueues it for execution.
         void loadProgram(const string &filename) {
@@ -920,7 +925,8 @@ class Runner {
 // through the base Instruction* regardless of which concrete subclass it points to.
 void demoPolymorphism() {
     cout << "===Polymorphism Demo (MyVector<Instruction*>)===" << endl;
-    CPU cpu;
+    FlagRegister flags;
+    CPU cpu(flags);
     MyVector<Instruction*> program;
     program.push_back(new MovInstruction(1, 5, 0)); // MOV R1, 5
     program.push_back(new AddInstruction(1, 1));    // ADD R1, R1
