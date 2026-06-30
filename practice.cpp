@@ -955,12 +955,14 @@ void demoPolymorphism() {
     }
 }
 
-// Entry point: loads the assembly program in test_program.asm and runs it through the VM.
-int main() {
+// Entry point: loads the assembly program named on the command line (examiners can
+// pass their own .asm file here), defaulting to test_program.asm if none is given.
+int main(int argc, char* argv[]) {
     demoPolymorphism();
     cout << "\n";
+    string filename = (argc > 1) ? argv[1] : "test_program.asm";
     Runner runner;
-    runner.loadProgram("test_program.asm");
+    runner.loadProgram(filename);
     runner.run();
     return 0;
 }
