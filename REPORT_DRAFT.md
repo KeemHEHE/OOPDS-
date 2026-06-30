@@ -332,8 +332,9 @@ ADD R0, R3
 ADD R0, R4
 DISPLAY R0
 ```
-*Verified:* inputs 10, 15, 20, 25, 30 → R0 = **100**.
-> 📌 **TODO:** screenshot of compiling/running this program with sample inputs and output.
+*Verified:* inputs 10, 20, 30, 40, 0 → R0 = **100**.
+
+![sum5.asm running](screenshots/sum5-output.png)
 
 ### 4.3 Example Program 2 — Average of 4 Values (`average4.asm`)
 
@@ -351,7 +352,8 @@ DIV R0, R4
 DISPLAY R0
 ```
 *Verified:* inputs 10, 20, 30, 40 → R0 = **25**.
-> 📌 **TODO:** screenshot of compiling/running this program with sample inputs and output.
+
+![average4.asm running](screenshots/average4-output.png)
 
 ### 4.4 Example Program 3 — Factorial of 4 (`factorial4.asm`)
 
@@ -369,7 +371,8 @@ MUL R0, R1
 DISPLAY R0
 ```
 *Verified:* R0 = **24**.
-> 📌 **TODO:** screenshot of compiling/running this program and its output.
+
+![factorial4.asm running](screenshots/factorial4-output.png)
 
 ---
 
@@ -446,7 +449,7 @@ This assignment provided practical experience applying encapsulation, inheritanc
 - [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
 - [x] Class diagram (§2.3) rendered and embedded — fix the "ShiInstruction" → "ShlInstruction" typo and re-export first.
 - [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
-- [ ] Capture screenshots for §4.2–4.4 (compiling and running each example program).
+- [x] Screenshots for §4.2–4.4 captured and embedded.
 - [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
 - [ ] Capture a flag-overflow screenshot for §3.2.
 - [ ] Convert this Markdown file to PDF and rename to `<tutorial>_<group>.pdf`.
