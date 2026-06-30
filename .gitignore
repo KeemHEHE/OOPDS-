@@ -1,1 +1,8 @@
 .DS_Store
+
+# compiled binaries (build locally with g++, don't track outputs)
+practice
+output
+test
+*.o
+*.out
