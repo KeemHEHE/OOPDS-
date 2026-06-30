@@ -678,6 +678,54 @@ class DisplayInstruction : public IOInstruction {
         }
 };
 
+// Member 1: Adam
+// RESET <CF|OF|UF|ZF> -> clears exactly one flag back to 0.
+class ResetInstruction : public Instruction {
+    private:
+        char flag; // 'O'=OF, 'U'=UF, 'C'=CF, 'Z'=ZF
+    public:
+        ResetInstruction(char f) : flag(f) {}
+        // Clears the selected flag on the CPU's FlagRegister, advances PC.
+        void execute(CPU &cpu) {
+            FlagRegister &flags = cpu.getFlags();
+            if (flag == 'O') flags.setOF(0);
+            else if (flag == 'U') flags.setUF(0);
+            else if (flag == 'C') flags.setCF(0);
+            else if (flag == 'Z') flags.setZF(0);
+            cpu.incrementPC();
+        }
+};
+
+// Member 1: Adam
+// PUSH Rsrc -> pushes register src's value onto the stack.
+class PushInstruction : public Instruction {
+    private:
+        int src;
+    public:
+        PushInstruction(int s) : src(s) {}
+        // Pushes register src's value onto the CPU's stack, advances PC.
+        void execute(CPU &cpu) {
+            cpu.pushStack(cpu.getRegister(src).getValue());
+            cpu.incrementPC();
+        }
+};
+
+// Member 1: Adam
+// POP Rdest -> pops the top of the stack into register dest.
+class PopInstruction : public Instruction {
+    private:
+        int dest;
+    public:
+        PopInstruction(int d) : dest(d) {}
+        // Pops the stack into register dest, updates flags, advances PC.
+        void execute(CPU &cpu) {
+            int val = cpu.popStack();
+            cpu.getRegister(dest).setValue(val);
+            cpu.updateFlags(val);
+            cpu.incrementPC();
+        }
+};
+
 // Member 3: Ammar
 // .asm parsing helpers. Lines look like "MOV R0, 5" / "LOAD R1, [10]" / "LOAD R1, [R2]" /
 // "; a comment". Anything after a ';' is ignored, as are blank lines.
@@ -767,6 +815,24 @@ static Instruction* buildIO(const string &op, const string &op1) {
                             : (Instruction*)new DisplayInstruction(reg);
 }
 
+// Builds the Instruction for RESET from its single flag-name operand (OF/UF/CF/ZF).
+static Instruction* buildReset(const string &op1) {
+    string f = op1;
+    for (auto &c : f) c = toupper((unsigned char)c);
+    if (f == "OF") return new ResetInstruction('O');
+    if (f == "UF") return new ResetInstruction('U');
+    if (f == "CF") return new ResetInstruction('C');
+    if (f == "ZF") return new ResetInstruction('Z');
+    return nullptr;
+}
+
+// Builds the Instruction for PUSH/POP from the opcode and its single register operand.
+static Instruction* buildStack(const string &op, const string &op1) {
+    int reg = parseRegister(op1);
+    return (op == "PUSH") ? (Instruction*)new PushInstruction(reg)
+                           : (Instruction*)new PopInstruction(reg);
+}
+
 // Parses one .asm line into the matching Instruction, or nullptr for blank/comment/unknown lines.
 static Instruction* parseLine(const string &rawLine) {
     string line = rawLine;
@@ -794,6 +860,8 @@ static Instruction* parseLine(const string &rawLine) {
         return buildShift(opcode, op1, op2);
     }
     if (opcode == "INPUT" || opcode == "DISPLAY") return buildIO(opcode, op1);
+    if (opcode == "RESET") return buildReset(op1);
+    if (opcode == "PUSH" || opcode == "POP") return buildStack(opcode, op1);
     return nullptr;
 }
 
