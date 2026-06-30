@@ -37,7 +37,11 @@ The system is organized into three layers:
 
 ### 2.3 UML Class Diagram
 
-> 📌 **TODO:** render the Mermaid source below at [mermaid.live](https://mermaid.live) (or paste into draw.io) and replace this note with the exported image.
+![UML class diagram](screenshots/class-diagram.png)
+
+> 📌 **TODO:** the box under `ShiftInstruction` currently reads "ShiInstruction" — should be `ShlInstruction`. Fix in draw.io and re-export before final submission.
+
+Mermaid source (kept for reference / re-rendering if needed):
 
 ```mermaid
 classDiagram
@@ -428,7 +432,8 @@ This assignment provided practical experience applying encapsulation, inheritanc
 ## Outstanding items before this report is submission-ready
 - [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
 - [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
-- [ ] Render all 4 Mermaid diagrams (class diagram §2.3, and the 3 activity diagrams in §3.1/§3.2) as images at mermaid.live or draw.io.
+- [x] Class diagram (§2.3) rendered and embedded — fix the "ShiInstruction" → "ShlInstruction" typo and re-export first.
+- [ ] Render the 3 activity diagrams (§3.1/§3.2) as images at mermaid.live or draw.io and embed them the same way.
 - [ ] Capture screenshots for §4.2–4.4 (compiling and running each example program).
 - [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
 - [ ] Capture a flag-overflow screenshot for §3.2.
