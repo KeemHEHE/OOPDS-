@@ -198,13 +198,55 @@ classDiagram
 
 ### 3.1 Fetch–Decode–Execute Loop (Runner)
 
-> 📌 **TODO:** add a UML activity diagram for this loop.
-
 `Runner::loadProgram(filename)` works in two stages, matching the spec's description of reading the file "into a dynamic array/vector of strings":
 1. Reads the `.asm` file line by line via `ifstream`/`getline`, pushing each raw line into a `MyVector<string>`.
 2. Iterates that vector; each line is passed to `parseLine()`, which strips comments (`;`) and blank lines, splits the opcode from its comma-separated operands, detects more than one instruction on a single line (exits with an error if found, per spec), and constructs the matching `Instruction*` subclass. Valid instructions are enqueued into `instrQueue` (a `MyQueue<Instruction*>`).
 
-`Runner::run()` then dequeues and executes instructions in FIFO order until the queue is empty: `instr->execute(cpu)` (virtual dispatch — this is where polymorphism happens), then deletes the instruction. After the loop, `cpu.displayState()` prints the final VM state to both the screen and `output.txt`.
+**Activity diagram — `loadProgram()`:**
+
+```mermaid
+flowchart TD
+    A([Start: loadProgram]) --> B[Open .asm file]
+    B --> C{More lines in file?}
+    C -- Yes --> D[Read one line]
+    D --> E[Push line into lines vector]
+    E --> C
+    C -- No --> F[Set i = 0]
+    F --> G{i less than lines.size?}
+    G -- No --> Z([End: program queued])
+    G -- Yes --> H[Get lines at index i]
+    H --> I[Strip comment, trim whitespace]
+    I --> J{Line empty?}
+    J -- Yes --> Y[Increment i]
+    Y --> G
+    J -- No --> K[Split into opcode and operands]
+    K --> L{More than one instruction on this line?}
+    L -- Yes --> M[[Print error and exit program]]
+    L -- No --> N[Match opcode to instruction type]
+    N --> O[Construct matching Instruction subclass]
+    O --> P[Enqueue into instruction queue]
+    P --> Y
+```
+
+`Runner::run()` then dequeues and executes instructions in FIFO order until the queue is empty: `instr->execute(cpu)` (virtual dispatch — this is where polymorphism happens), then deletes the instruction. After the loop (or after every instruction, in `--step` mode), `cpu.displayState()` prints the VM state to both the screen and `output.txt`.
+
+**Activity diagram — `run()`:**
+
+```mermaid
+flowchart TD
+    A([Start: run]) --> B{Instruction queue empty?}
+    B -- No --> C[Dequeue front instruction]
+    C --> D[Call execute on instruction via base pointer]
+    D --> E[Delete instruction]
+    E --> H{Step mode enabled?}
+    H -- Yes --> I[Dump VM state after this instruction]
+    I --> B
+    H -- No --> B
+    B -- Yes --> F{Step mode enabled?}
+    F -- No --> G[Dump final VM state]
+    G --> Z([End])
+    F -- Yes --> Z
+```
 
 ### 3.2 Flag Update Algorithm
 
@@ -221,6 +263,18 @@ void updateFlags(int rawResult) {
 ```
 
 Every `Instruction::execute()` that changes a destination register's value calls this with the raw (unclamped) result, then calls `setValue()` on the register, which performs the actual clamping. Per spec section 3.10's general rule ("flags should be updated after each operation that changes the value of a destination register"), this applies broadly — not just to ADD/SUB/MUL/DIV/INC/DEC, but also MOV, LOAD, ROL/ROR/SHL/SHR, and POP (all of which write a new value into a register). `PUSH` does **not** update flags, since it doesn't change any register.
+
+**Activity diagram — generic `Instruction::execute()` pattern (e.g. `AddInstruction`):**
+
+```mermaid
+flowchart TD
+    A([Start: execute]) --> B[Read operand value: register, memory, or immediate]
+    B --> C[Compute raw integer result of the operation]
+    C --> D[Update flags from the raw unclamped result]
+    D --> E[Clamp and store result into destination register]
+    E --> F[Increment program counter]
+    F --> Z([End])
+```
 
 > 📌 **TODO:** capture a screenshot of a sample `ADD` operation that overflows R0 past 127, showing `OF=1` in the output.
 
@@ -374,8 +428,7 @@ This assignment provided practical experience applying encapsulation, inheritanc
 ## Outstanding items before this report is submission-ready
 - [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
 - [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
-- [ ] Render the Mermaid diagram in §2.3 as an image (mermaid.live or draw.io).
-- [ ] Add a UML activity diagram for the Runner's fetch-decode-execute loop (§3.1).
+- [ ] Render all 4 Mermaid diagrams (class diagram §2.3, and the 3 activity diagrams in §3.1/§3.2) as images at mermaid.live or draw.io.
 - [ ] Capture screenshots for §4.2–4.4 (compiling and running each example program).
 - [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
 - [ ] Capture a flag-overflow screenshot for §3.2.
