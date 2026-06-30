@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <cctype>
 #include <cstdlib>
@@ -245,35 +246,43 @@ class CPU {
         }
 
         // Prints the full VM state (registers, flags, PC, memory) in the required output format.
+        // Builds the dump format once into a buffer, then writes it to both the
+        // screen and output.txt -- spec requires both ("store the results to a
+        // file and display to the screen").
         void displayState() {
-            cout << dec << "#Begin#" << endl;
+            ostringstream out;
+            out << dec << "#Begin#" << endl;
 
-            cout << "#Registers";
+            out << "#Registers";
             for (int i = 0; i < 8; i++) {
-                cout << "#" << setfill('0') << setw(4)
-                     << (registers[i].getValue() & 0xFF);
+                out << "#" << setfill('0') << setw(4)
+                    << (registers[i].getValue() & 0xFF);
             }
-            cout << "#" << endl;
+            out << "#" << endl;
 
-            cout << "#Flags#OF#" << flags.getOF()
-                 << "#UF#" << flags.getUF()
-                 << "#CF#" << flags.getCF()
-                 << "#ZF#" << flags.getZF() << "#" << endl;
+            out << "#Flags#OF#" << flags.getOF()
+                << "#UF#" << flags.getUF()
+                << "#CF#" << flags.getCF()
+                << "#ZF#" << flags.getZF() << "#" << endl;
 
-            cout << "#PC#" << setfill('0') << setw(4)
-                 << (int)PC << "#" << endl;
+            out << "#PC#" << setfill('0') << setw(4)
+                << (int)PC << "#" << endl;
 
-            cout << "#Memory#" << endl;
+            out << "#Memory#" << endl;
             for (int row = 0; row < 8; row++){
                 for(int col = 0; col < 8; col++) {
-                    cout << "#" << setfill('0') << setw(4)
-                        <<(memory.read(row * 8 + col) & 0xFF);
+                    out << "#" << setfill('0') << setw(4)
+                        << (memory.read(row * 8 + col) & 0xFF);
 
                 }
-                cout << "#" << endl;
+                out << "#" << endl;
             }
 
-            cout << "#End#" << endl;
+            out << "#End#" << endl;
+
+            cout << out.str();
+            ofstream outFile("output.txt");
+            outFile << out.str();
 
 
 
@@ -611,33 +620,39 @@ class RorInstruction : public ShiftInstruction {
 };
 
 // Member 3: Ammar
-// SHL Rdest, count -> shift dest's bits left by count positions.
+// SHL Rdest, count -> logical left shift, zero-filling from the right. Shifting by
+// 8 or more always yields 0 (every bit has been shifted out).
 class ShlInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
         ShlInstruction(int d, int c) : dest(d), count(c) {}
-        // Shifts dest left by count, updates flags from the raw result, advances PC.
+        // Shifts dest's unsigned byte pattern left by count (not the signed int value,
+        // which would be UB/clamp incorrectly -- see RolInstruction), advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() << count;
-            cpu.getRegister(dest).setValue(res);
-            cpu.updateFlags(res);
+            unsigned char val = cpu.getRegister(dest).getValue();
+            unsigned char res = (count >= 8) ? 0 : (unsigned char)(val << count);
+            cpu.getRegister(dest).setValue((signed char)res);
+            cpu.updateFlags((signed char)res);
             cpu.incrementPC();
         }
 };
 
 // Member 3: Ammar
-// SHR Rdest, count -> shift dest's bits right by count positions.
+// SHR Rdest, count -> logical right shift, zero-filling from the left. Shifting by
+// 8 or more always yields 0.
 class ShrInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
         ShrInstruction(int d, int c) : dest(d), count(c) {}
-        // Shifts dest right by count, updates flags from the raw result, advances PC.
+        // Shifts dest's unsigned byte pattern right by count (a signed >> would sign-extend
+        // instead of zero-filling, which the spec explicitly requires), advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() >> count;
-            cpu.getRegister(dest).setValue(res);
-            cpu.updateFlags(res);
+            unsigned char val = cpu.getRegister(dest).getValue();
+            unsigned char res = (count >= 8) ? 0 : (unsigned char)(val >> count);
+            cpu.getRegister(dest).setValue((signed char)res);
+            cpu.updateFlags((signed char)res);
             cpu.incrementPC();
         }
 };

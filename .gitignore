@@ -6,3 +6,6 @@ output
 test
 *.o
 *.out
+
+# runtime dump written by CPU::displayState()
+output.txt
