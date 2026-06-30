@@ -893,102 +893,31 @@ class Runner {
         }
 };
 
-// Runs quick smoke tests for every Member 1 class (Register, GeneralRegister,
-// FlagRegister, Memory, Stack, CPU) and prints the results to the console.
-int main() {
-
-    // Test Register
-    cout << "===Register Tests===" << endl;
-    Register R0;
-    R0.setValue(50);
-    cout << "R0 value: " << R0.getValue() << endl;
-    R0.setValue(200);
-    cout << "R0 max clamp: " << R0.getValue() << endl;
-    R0.setValue(-200);
-    cout << "R0 min clamp: " << R0.getValue() << endl;
-    R0.setValue(42);
-    R0.display();
-
-    // Test GeneralRegister array
-    cout << "\n===GeneralRegister Tests===" << endl;
-    GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
-    registers[0].setValue(5);
-    registers[1].setValue(10);
-    registers[3].setValue(200);
-    for (int i = 0; i < 8; i++) {
-        cout << "R" << i << " = " << registers[i].getValue() << endl;
-    }
-
-    // Test FlagRegister
-    cout << "\n===FlagRegister Tests===" << endl;
-    FlagRegister flags;
-    flags.displayFlags();
-    flags.setOF(1);
-    flags.displayFlags();
-    flags.reset();
-    flags.setZF(1);
-    flags.displayFlags();
-
-    // Test Memory
-    cout << "\n===Memory Tests===" << endl;
-    Memory mem;
-    mem.write(10, 99);
-    cout << "mem[10] = " << mem.read(10) << endl;
-    cout << "mem[0]  = " << mem.read(0) << endl;
-
-    // Test CPU
-    cout << "\n===CPU Tests===" << endl;
+// Demonstrates polymorphic dispatch through MyVector<Instruction*> (a second, separate
+// site from Runner's queue-based dispatch) -- virtual execute() resolves correctly
+// through the base Instruction* regardless of which concrete subclass it points to.
+void demoPolymorphism() {
+    cout << "===Polymorphism Demo (MyVector<Instruction*>)===" << endl;
     CPU cpu;
-    cpu.getRegister(0).setValue(77);
-    cout << "CPU R0 = " << cpu.getRegister(0).getValue() << endl;
-    cpu.getMemory().write(5, 33);
-    cout << "CPU mem[5] = " << cpu.getMemory().read(5) << endl;
-    cpu.incrementPC();
-    cout << "CPU PC = " << (int)cpu.getPC() << endl;
-
-    // Test displayState
-    cout << "\n===displayState Test===" << endl;
-    CPU cpu2;
-    cpu2.getRegister(1).setValue(17);
-    cpu2.getRegister(3).setValue(68);
-    cpu2.incrementPC();
-    cpu2.incrementPC();
-    cpu2.getMemory().write(20, 68);
-    cpu2.displayState();
-
-    // Test Instruction polymorphism (Member 2: Adeeb's classes, integrated here)
-    cout << dec; // displayState() leaves cout in hex mode, switch back for normal numbers
-    cout << "\n===Instruction Tests===" << endl;
-    CPU cpu3;
     MyVector<Instruction*> program;
-    program.push_back(new MovInstruction(1, 5, 0));   // MOV R1, 5
-    program.push_back(new AddInstruction(1, 1));      // ADD R1, R1
-    program.push_back(new MulInstruction(1, 1));       // MUL R1, R1
-    program.push_back(new IncInstruction(1));          // INC R1
+    program.push_back(new MovInstruction(1, 5, 0)); // MOV R1, 5
+    program.push_back(new AddInstruction(1, 1));    // ADD R1, R1
+    program.push_back(new IncInstruction(1));       // INC R1
     for (int i = 0; i < program.size(); i++) {
-        Instruction* instr = program.get(i);
-        instr->execute(cpu3);
-        cout << "after instruction " << i << " -> R1=" << cpu3.getRegister(1).getValue()
-             << " PC=" << (int)cpu3.getPC() << endl;
+        program.get(i)->execute(cpu);
+        cout << "after instruction " << i << " -> R1=" << cpu.getRegister(1).getValue() << endl;
     }
     for (int i = 0; i < program.size(); i++) {
         delete program.get(i);
     }
+}
 
-    // Test ROL signed-cast fix (Member 3: Ammar's classes, integrated here)
-    cout << "\n===ROL Fix Test===" << endl;
-    CPU cpu5;
-    cpu5.getRegister(0).setValue(64); // 0x40
-    Instruction* rol = new RolInstruction(0, 1);
-    rol->execute(cpu5);
-    cout << "R0 after ROL(64, 1): " << cpu5.getRegister(0).getValue() << " (expect -128)" << endl;
-    delete rol;
-
-    // Test Runner reading a real .asm file (Member 3: Ammar's class, integrated here)
-    cout << "\n===Runner Demo (test_program.asm)===" << endl;
+// Entry point: loads the assembly program in test_program.asm and runs it through the VM.
+int main() {
+    demoPolymorphism();
+    cout << "\n";
     Runner runner;
     runner.loadProgram("test_program.asm");
     runner.run();
-
     return 0;
 }
