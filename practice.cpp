@@ -245,11 +245,8 @@ class CPU {
 
         }
 
-        // Prints the full VM state (registers, flags, PC, memory) in the required output format.
-        // Builds the dump format once into a buffer, then writes it to both the
-        // screen and output.txt -- spec requires both ("store the results to a
-        // file and display to the screen").
-        void displayState() {
+        // Builds the dump format (registers/flags/PC/memory) into a single string.
+        string buildDump() {
             ostringstream out;
             out << dec << "#Begin#" << endl;
 
@@ -265,28 +262,28 @@ class CPU {
                 << "#CF#" << flags.getCF()
                 << "#ZF#" << flags.getZF() << "#" << endl;
 
-            out << "#PC#" << setfill('0') << setw(4)
-                << (int)PC << "#" << endl;
+            out << "#PC#" << setfill('0') << setw(4) << (int)PC << "#" << endl;
 
             out << "#Memory#" << endl;
             for (int row = 0; row < 8; row++){
                 for(int col = 0; col < 8; col++) {
                     out << "#" << setfill('0') << setw(4)
                         << (memory.read(row * 8 + col) & 0xFF);
-
                 }
                 out << "#" << endl;
             }
-
             out << "#End#" << endl;
+            return out.str();
+        }
 
-            cout << out.str();
+        // Prints the full VM state in the required output format to both the
+        // screen and output.txt -- spec requires both ("store the results to a
+        // file and display to the screen").
+        void displayState() {
+            string dump = buildDump();
+            cout << dump;
             ofstream outFile("output.txt");
-            outFile << out.str();
-
-
-
-
+            outFile << dump;
         }
 };
 
