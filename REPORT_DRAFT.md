@@ -7,8 +7,8 @@
 | Name | Student ID | Contribution |
 |------|-----------|--------------|
 | Adam | 252UC242PM | Register, GeneralRegister, FlagRegister, Memory, Stack, CPU (core architecture); integration of all members' work; RESET/PUSH/POP |
-| Adeeb | [FILL IN] | Instruction abstract base, custom Vector (`MyVector`), MOV, ADD, SUB, MUL, DIV, INC, DEC |
-| Ammar | [FILL IN] | Custom Queue (`MyQueue`), LOAD, STORE, ROL, ROR, SHL, SHR, INPUT, DISPLAY, Runner |
+| Adeeb | 252UC242WZ | Instruction abstract base, custom Vector (`MyVector`), MOV, ADD, SUB, MUL, DIV, INC, DEC |
+| Ammar | 253UC242Z8 | Custom Queue (`MyQueue`), LOAD, STORE, ROL, ROR, SHL, SHR, INPUT, DISPLAY, Runner |
 
 ---
 
@@ -444,7 +444,8 @@ This assignment provided practical experience applying encapsulation, inheritanc
 
 ## Outstanding items before this report is submission-ready
 - [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
-- [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
+- [x] Adeeb's and Ammar's student IDs filled in.
+- [ ] Fill in tutorial section and group number (still placeholders at the top of the report).
 - [x] Class diagram (§2.3) rendered and embedded.
 - [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
 - [x] Screenshots for §4.2–4.4 captured and embedded.
