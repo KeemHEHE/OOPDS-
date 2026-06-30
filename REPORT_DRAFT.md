@@ -351,14 +351,29 @@ Trace of **`sum5.asm`** with inputs 10, 15, 20, 25, 30 (all flags stay 0 through
 
 ---
 
-## 7. Conclusion
+## 7. AI Tool Usage Disclosure
+
+> 📌 **TODO:** confirm this section's wording/placement against the actual policy once confirmed with the course coordinator — this is a reasonable default, not a verified-compliant template.
+
+Claude Code (Anthropic) was used during development to assist with:
+- Code review and bug-finding — e.g. identifying that `ROL`/`ROR`/`SHL`/`SHR` corrupted register values by shifting the signed `int` representation instead of the unsigned byte pattern, and that `displayState()` was outputting hexadecimal instead of the decimal format the spec requires.
+- Integrating each member's individually-developed classes into the shared `practice.cpp`, including resolving structural gaps against the spec's required class diagram (adding the `ArithmeticInstruction`/`IOInstruction`/`ShiftInstruction` intermediate classes).
+- Implementing the `.asm` file parser and `Runner`'s file-loading logic.
+- Verifying instruction behavior against the assignment specification PDF, including building and running the spec's own worked example program to confirm output matched byte-for-byte.
+
+All AI-assisted code was reviewed, tested, and is understood by the team before inclusion in this submission.
+
+---
+
+## 8. Conclusion
 
 This assignment provided practical experience applying encapsulation, inheritance, composition, aggregation, and polymorphism to model a working virtual machine, and required implementing custom data structures (`MyVector`, `MyQueue`, `Stack`) rather than relying on STL. The resulting interpreter parses and executes a `.asm` assembly program end-to-end, correctly tracking register, memory, flag, and stack state, and matches the spec's exact output format — verified bit-for-bit against the spec's own worked examples for MOV, ADD, ROL, SHL, and the final state dump.
 
 ---
 
 ## Outstanding items before this report is submission-ready
-- [ ] Fill in tutorial/group number and student IDs.
+- [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
+- [ ] Fill in tutorial/group number and Adeeb's and Ammar's student IDs.
 - [ ] Render the Mermaid diagram in §2.3 as an image (mermaid.live or draw.io).
 - [ ] Add a UML activity diagram for the Runner's fetch-decode-execute loop (§3.1).
 - [ ] Capture screenshots for §4.2–4.4 (compiling and running each example program).
