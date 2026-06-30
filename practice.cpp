@@ -406,15 +406,19 @@ class MovInstruction : public Instruction {
 };
 
 // Member 2: Adeeb
-// ADD Rdest, Rsrc -> dest = dest + src
+// ADD Rdest, Rsrc or ADD Rdest, imm -> dest = dest + src. The spec's own worked
+// example ("ADD R1, 6") uses an immediate despite section 3.5 saying both operands
+// are registers, so both forms are supported, same as MovInstruction's modes.
 class AddInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
+        bool isImmediate;
     public:
-        AddInstruction(int d, int s) { dest = d; src = s; }
-        // Adds src into dest, updates flags from the raw (unclamped) result, advances PC.
+        AddInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
+        // Adds src (register or immediate) into dest, updates flags, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() + cpu.getRegister(src).getValue();
+            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
+            int res = cpu.getRegister(dest).getValue() + srcVal;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -422,15 +426,17 @@ class AddInstruction : public ArithmeticInstruction {
 };
 
 // Member 2: Adeeb
-// SUB Rdest, Rsrc -> dest = dest - src
+// SUB Rdest, Rsrc or SUB Rdest, imm -> dest = dest - src.
 class SubInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
+        bool isImmediate;
     public:
-        SubInstruction(int d, int s) { dest = d; src = s; }
-        // Subtracts src from dest, updates flags from the raw result, advances PC.
+        SubInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
+        // Subtracts src (register or immediate) from dest, updates flags, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() - cpu.getRegister(src).getValue();
+            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
+            int res = cpu.getRegister(dest).getValue() - srcVal;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -438,15 +444,17 @@ class SubInstruction : public ArithmeticInstruction {
 };
 
 // Member 2: Adeeb
-// MUL Rdest, Rsrc -> dest = dest * src
+// MUL Rdest, Rsrc or MUL Rdest, imm -> dest = dest * src.
 class MulInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
+        bool isImmediate;
     public:
-        MulInstruction(int d, int s) { dest = d; src = s; }
-        // Multiplies dest by src, updates flags from the raw result, advances PC.
+        MulInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
+        // Multiplies dest by src (register or immediate), updates flags, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() * cpu.getRegister(src).getValue();
+            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
+            int res = cpu.getRegister(dest).getValue() * srcVal;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -454,15 +462,17 @@ class MulInstruction : public ArithmeticInstruction {
 };
 
 // Member 2: Adeeb
-// DIV Rdest, Rsrc -> dest = dest / src
+// DIV Rdest, Rsrc or DIV Rdest, imm -> dest = dest / src.
 class DivInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
+        bool isImmediate;
     public:
-        DivInstruction(int d, int s) { dest = d; src = s; }
-        // Divides dest by src when src isn't 0 (leaving dest untouched otherwise), then advances PC.
+        DivInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
+        // Divides dest by src (register or immediate) when src isn't 0
+        // (leaving dest untouched otherwise), then advances PC.
         void execute(CPU &cpu) {
-            int srcVal = cpu.getRegister(src).getValue();
+            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
             if (srcVal != 0) {
                 int res = cpu.getRegister(dest).getValue() / srcVal;
                 cpu.getRegister(dest).setValue(res);
@@ -791,31 +801,43 @@ static Instruction* buildMov(const string &op1, const string &op2) {
 }
 
 // Builds the Instruction for ADD/SUB/MUL/DIV/INC/DEC from the opcode and its operands.
+// The second operand may be a register (e.g. "ADD R0, R1") or an immediate (e.g.
+// "ADD R1, 6", as used in the spec's own worked example) -- whichever it parses as.
 static Instruction* buildArithmetic(const string &op, const string &op1, const string &op2) {
     int dest = parseRegister(op1);
     if (op == "INC") return new IncInstruction(dest);
     if (op == "DEC") return new DecInstruction(dest);
-    int src = parseRegister(op2);
-    if (op == "ADD") return new AddInstruction(dest, src);
-    if (op == "SUB") return new SubInstruction(dest, src);
-    if (op == "MUL") return new MulInstruction(dest, src);
-    return new DivInstruction(dest, src);
+    int srcReg = parseRegister(op2);
+    bool isImm = (srcReg == -1);
+    int src = isImm ? stoi(op2) : srcReg;
+    if (op == "ADD") return new AddInstruction(dest, src, isImm);
+    if (op == "SUB") return new SubInstruction(dest, src, isImm);
+    if (op == "MUL") return new MulInstruction(dest, src, isImm);
+    return new DivInstruction(dest, src, isImm);
 }
 
-// Builds the Instruction for LOAD/STORE. LOAD always brackets its operand ([addr] or
-// [Rs]); STORE only brackets the indirect form. Either way, what matters is whether
-// the bracketed (or bare) token names a register or a literal address.
+// Builds the Instruction for LOAD/STORE. LOAD's destination register is always first
+// ("LOAD Rd, [addr]"/"LOAD Rd, [Rs]"). STORE's operand order is inconsistent in the
+// spec itself -- section 3.9 shows "STORE Rs, addr"/"STORE Rs, [Rd]" (register first)
+// but the spec's own end-to-end worked example shows "STORE addr, Rs" (address
+// first) -- so for STORE we detect which operand is the register regardless of
+// position, instead of assuming an order.
 static Instruction* buildMemory(const string &op, const string &op1, const string &op2) {
-    int reg = parseRegister(op1);
-    string inner = isBracketed(op2) ? stripBrackets(op2) : op2;
-    int addrReg = parseRegister(inner);
-    if (addrReg != -1) {
-        return (op == "LOAD") ? (Instruction*)new LoadInstruction(reg, addrReg, true)
-                               : (Instruction*)new StoreInstruction(reg, addrReg, true);
+    if (op == "LOAD") {
+        int dest = parseRegister(op1);
+        string inner = isBracketed(op2) ? stripBrackets(op2) : op2;
+        int addrReg = parseRegister(inner);
+        if (addrReg != -1) return new LoadInstruction(dest, addrReg, true);
+        return new LoadInstruction(dest, stoi(inner), false);
     }
-    int addr = stoi(inner);
-    return (op == "LOAD") ? (Instruction*)new LoadInstruction(reg, addr, false)
-                           : (Instruction*)new StoreInstruction(reg, addr, false);
+    int reg1 = parseRegister(op1);
+    if (reg1 != -1) {
+        string inner = isBracketed(op2) ? stripBrackets(op2) : op2;
+        int reg2 = parseRegister(inner);
+        if (reg2 != -1) return new StoreInstruction(reg1, reg2, true);
+        return new StoreInstruction(reg1, stoi(inner), false);
+    }
+    return new StoreInstruction(parseRegister(op2), stoi(op1), false);
 }
 
 // Builds the Instruction for ROL/ROR/SHL/SHR from the opcode, destination register, and count.
