@@ -1,0 +1,19 @@
+; sample assembly program to exercise the Runner's .asm parser
+MOV R0, 10
+MOV R1, 3
+ADD R0, R1
+STORE R0, 20
+LOAD R2, [20]
+MOV R3, R0
+ROL R3, 2
+SHL R1, 1
+MOV R4, 20
+LOAD R5, [R4]
+INC R5
+STORE R5, [R4]
+INPUT R6
+DISPLAY R0
+DISPLAY R2
+DISPLAY R3
+DISPLAY R5
+DISPLAY R6

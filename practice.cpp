@@ -1,5 +1,8 @@
 #include <iostream>
 #include <iomanip>
+#include <fstream>
+#include <string>
+#include <cctype>
 using namespace std;
 
 // Member 1: Adam
@@ -521,14 +524,17 @@ class MyQueue {
 };
 
 // Member 3: Ammar
-// LOAD Rdest, [addr] -> copies a value from a fixed memory address into a register.
+// LOAD Rdest, [addr] (direct) or LOAD Rdest, [Rs] (indirect, addrOrReg names the
+// register holding the address) -> copies a memory value into a register.
 class LoadInstruction : public Instruction {
     private:
-        int dest, addr;
+        int dest, addrOrReg;
+        bool indirect;
     public:
-        LoadInstruction(int d, int a) : dest(d), addr(a) {}
-        // Reads memory[addr] into register dest, updates flags, advances PC.
+        LoadInstruction(int d, int a, bool ind = false) : dest(d), addrOrReg(a), indirect(ind) {}
+        // Resolves the address (direct or via register), reads memory, stores into dest.
         void execute(CPU &cpu) {
+            int addr = indirect ? cpu.getRegister(addrOrReg).getValue() : addrOrReg;
             int val = cpu.getMemory().read(addr);
             cpu.getRegister(dest).setValue(val);
             cpu.updateFlags(val);
@@ -537,14 +543,17 @@ class LoadInstruction : public Instruction {
 };
 
 // Member 3: Ammar
-// STORE Rsrc, addr -> copies a register's value into a fixed memory address.
+// STORE Rsrc, addr (direct) or STORE Rsrc, [Rd] (indirect, addrOrReg names the
+// register holding the address) -> copies a register's value into memory.
 class StoreInstruction : public Instruction {
     private:
-        int src, addr;
+        int src, addrOrReg;
+        bool indirect;
     public:
-        StoreInstruction(int s, int a) : src(s), addr(a) {}
-        // Writes register src's value into memory[addr], updates flags, advances PC.
+        StoreInstruction(int s, int a, bool ind = false) : src(s), addrOrReg(a), indirect(ind) {}
+        // Resolves the address (direct or via register), writes register src's value there.
         void execute(CPU &cpu) {
+            int addr = indirect ? cpu.getRegister(addrOrReg).getValue() : addrOrReg;
             int val = cpu.getRegister(src).getValue();
             cpu.getMemory().write(addr, val);
             cpu.updateFlags(val);
@@ -561,17 +570,18 @@ class ShiftInstruction : public Instruction {
 };
 
 // Member 3: Ammar
-// ROL Rdest -> rotate bits left by 1.
+// ROL Rdest, count -> rotate dest's bits left by count positions (0-7).
 class RolInstruction : public ShiftInstruction {
     private:
-        int dest;
+        int dest, count;
     public:
-        RolInstruction(int d) : dest(d) {}
-        // Rotates dest's bit pattern left by 1, reinterpreting the byte as signed
+        RolInstruction(int d, int c) : dest(d), count(c) {}
+        // Rotates dest's bit pattern left by count, reinterpreting the byte as signed
         // before storing so a rotate never gets clamped like an overflowed value would.
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
-            unsigned char res = (val << 1) | (val >> 7);
+            int n = ((count % 8) + 8) % 8;
+            unsigned char res = (val << n) | (val >> (8 - n));
             cpu.getRegister(dest).setValue((signed char)res);
             cpu.updateFlags((signed char)res);
             cpu.incrementPC();
@@ -579,16 +589,17 @@ class RolInstruction : public ShiftInstruction {
 };
 
 // Member 3: Ammar
-// ROR Rdest -> rotate bits right by 1.
+// ROR Rdest, count -> rotate dest's bits right by count positions (0-7).
 class RorInstruction : public ShiftInstruction {
     private:
-        int dest;
+        int dest, count;
     public:
-        RorInstruction(int d) : dest(d) {}
-        // Rotates dest's bit pattern right by 1; see RolInstruction for the signed-cast note.
+        RorInstruction(int d, int c) : dest(d), count(c) {}
+        // Rotates dest's bit pattern right by count; see RolInstruction for the signed-cast note.
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
-            unsigned char res = (val >> 1) | (val << 7);
+            int n = ((count % 8) + 8) % 8;
+            unsigned char res = (val >> n) | (val << (8 - n));
             cpu.getRegister(dest).setValue((signed char)res);
             cpu.updateFlags((signed char)res);
             cpu.incrementPC();
@@ -596,15 +607,15 @@ class RorInstruction : public ShiftInstruction {
 };
 
 // Member 3: Ammar
-// SHL Rdest -> shift bits left by 1 (multiply by 2).
+// SHL Rdest, count -> shift dest's bits left by count positions.
 class ShlInstruction : public ShiftInstruction {
     private:
-        int dest;
+        int dest, count;
     public:
-        ShlInstruction(int d) : dest(d) {}
-        // Shifts dest left by 1, updates flags from the raw result, advances PC.
+        ShlInstruction(int d, int c) : dest(d), count(c) {}
+        // Shifts dest left by count, updates flags from the raw result, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() << 1;
+            int res = cpu.getRegister(dest).getValue() << count;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -612,15 +623,15 @@ class ShlInstruction : public ShiftInstruction {
 };
 
 // Member 3: Ammar
-// SHR Rdest -> shift bits right by 1 (divide by 2).
+// SHR Rdest, count -> shift dest's bits right by count positions.
 class ShrInstruction : public ShiftInstruction {
     private:
-        int dest;
+        int dest, count;
     public:
-        ShrInstruction(int d) : dest(d) {}
-        // Shifts dest right by 1, updates flags from the raw result, advances PC.
+        ShrInstruction(int d, int c) : dest(d), count(c) {}
+        // Shifts dest right by count, updates flags from the raw result, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() >> 1;
+            int res = cpu.getRegister(dest).getValue() >> count;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -668,21 +679,140 @@ class DisplayInstruction : public IOInstruction {
 };
 
 // Member 3: Ammar
-// Drives a queued program: enqueues instructions, then executes them in order via the CPU.
-// NOTE: loadProgram() is currently a hardcoded placeholder; it still needs to read and
-// parse an actual .asm file per the assignment spec.
+// .asm parsing helpers. Lines look like "MOV R0, 5" / "LOAD R1, [10]" / "LOAD R1, [R2]" /
+// "; a comment". Anything after a ';' is ignored, as are blank lines.
+
+// Strips leading/trailing whitespace from s.
+static string trim(const string &s) {
+    size_t start = s.find_first_not_of(" \t\r\n");
+    if (start == string::npos) return "";
+    size_t end = s.find_last_not_of(" \t\r\n");
+    return s.substr(start, end - start + 1);
+}
+
+// Returns true if tok is wrapped in [ ] (used for indirect addressing operands).
+static bool isBracketed(const string &tok) {
+    return tok.size() >= 2 && tok.front() == '[' && tok.back() == ']';
+}
+
+// Strips the [ ] wrapper from tok and trims the inside, or returns tok unchanged.
+static string stripBrackets(const string &tok) {
+    if (isBracketed(tok)) return trim(tok.substr(1, tok.size() - 2));
+    return tok;
+}
+
+// Parses "R3" -> 3, or -1 if tok isn't a valid R0-R7 register name.
+static int parseRegister(const string &tok) {
+    if (tok.size() < 2 || (tok[0] != 'R' && tok[0] != 'r')) return -1;
+    for (size_t i = 1; i < tok.size(); i++) {
+        if (!isdigit((unsigned char)tok[i])) return -1;
+    }
+    int id = stoi(tok.substr(1));
+    return (id >= 0 && id <= 7) ? id : -1;
+}
+
+// Builds the Instruction for MOV from its two operand tokens (handles all 3 addressing modes).
+static Instruction* buildMov(const string &op1, const string &op2) {
+    int dest = parseRegister(op1);
+    if (isBracketed(op2)) {
+        return new MovInstruction(dest, parseRegister(stripBrackets(op2)), true);
+    }
+    int srcReg = parseRegister(op2);
+    if (srcReg != -1) return new MovInstruction(dest, srcReg, false);
+    return new MovInstruction(dest, stoi(op2), 0);
+}
+
+// Builds the Instruction for ADD/SUB/MUL/DIV/INC/DEC from the opcode and its operands.
+static Instruction* buildArithmetic(const string &op, const string &op1, const string &op2) {
+    int dest = parseRegister(op1);
+    if (op == "INC") return new IncInstruction(dest);
+    if (op == "DEC") return new DecInstruction(dest);
+    int src = parseRegister(op2);
+    if (op == "ADD") return new AddInstruction(dest, src);
+    if (op == "SUB") return new SubInstruction(dest, src);
+    if (op == "MUL") return new MulInstruction(dest, src);
+    return new DivInstruction(dest, src);
+}
+
+// Builds the Instruction for LOAD/STORE. LOAD always brackets its operand ([addr] or
+// [Rs]); STORE only brackets the indirect form. Either way, what matters is whether
+// the bracketed (or bare) token names a register or a literal address.
+static Instruction* buildMemory(const string &op, const string &op1, const string &op2) {
+    int reg = parseRegister(op1);
+    string inner = isBracketed(op2) ? stripBrackets(op2) : op2;
+    int addrReg = parseRegister(inner);
+    if (addrReg != -1) {
+        return (op == "LOAD") ? (Instruction*)new LoadInstruction(reg, addrReg, true)
+                               : (Instruction*)new StoreInstruction(reg, addrReg, true);
+    }
+    int addr = stoi(inner);
+    return (op == "LOAD") ? (Instruction*)new LoadInstruction(reg, addr, false)
+                           : (Instruction*)new StoreInstruction(reg, addr, false);
+}
+
+// Builds the Instruction for ROL/ROR/SHL/SHR from the opcode, destination register, and count.
+static Instruction* buildShift(const string &op, const string &op1, const string &op2) {
+    int dest = parseRegister(op1);
+    int count = stoi(op2);
+    if (op == "ROL") return new RolInstruction(dest, count);
+    if (op == "ROR") return new RorInstruction(dest, count);
+    if (op == "SHL") return new ShlInstruction(dest, count);
+    return new ShrInstruction(dest, count);
+}
+
+// Builds the Instruction for INPUT/DISPLAY from the opcode and its single register operand.
+static Instruction* buildIO(const string &op, const string &op1) {
+    int reg = parseRegister(op1);
+    return (op == "INPUT") ? (Instruction*)new InputInstruction(reg)
+                            : (Instruction*)new DisplayInstruction(reg);
+}
+
+// Parses one .asm line into the matching Instruction, or nullptr for blank/comment/unknown lines.
+static Instruction* parseLine(const string &rawLine) {
+    string line = rawLine;
+    size_t semi = line.find(';');
+    if (semi != string::npos) line = line.substr(0, semi);
+    line = trim(line);
+    if (line.empty()) return nullptr;
+
+    size_t sp = line.find(' ');
+    string opcode = (sp == string::npos) ? line : line.substr(0, sp);
+    string rest = (sp == string::npos) ? "" : trim(line.substr(sp + 1));
+    for (auto &c : opcode) c = toupper((unsigned char)c);
+
+    size_t comma = rest.find(',');
+    string op1 = trim(comma == string::npos ? rest : rest.substr(0, comma));
+    string op2 = (comma == string::npos) ? "" : trim(rest.substr(comma + 1));
+
+    if (opcode == "MOV") return buildMov(op1, op2);
+    if (opcode == "ADD" || opcode == "SUB" || opcode == "MUL" ||
+        opcode == "DIV" || opcode == "INC" || opcode == "DEC") {
+        return buildArithmetic(opcode, op1, op2);
+    }
+    if (opcode == "LOAD" || opcode == "STORE") return buildMemory(opcode, op1, op2);
+    if (opcode == "ROL" || opcode == "ROR" || opcode == "SHL" || opcode == "SHR") {
+        return buildShift(opcode, op1, op2);
+    }
+    if (opcode == "INPUT" || opcode == "DISPLAY") return buildIO(opcode, op1);
+    return nullptr;
+}
+
+// Member 3: Ammar
+// Drives a queued program: reads a .asm file, parses each line into an Instruction,
+// enqueues it, then executes the queue in order via the CPU.
 class Runner {
     private:
         MyQueue instrQueue;
         CPU cpu;
     public:
-        // Placeholder program loader (TODO: replace with real .asm file parsing).
-        void loadProgram() {
-            instrQueue.enqueue(new InputInstruction(0));
-            instrQueue.enqueue(new StoreInstruction(0, 10));
-            instrQueue.enqueue(new LoadInstruction(1, 10));
-            instrQueue.enqueue(new ShlInstruction(1));
-            instrQueue.enqueue(new DisplayInstruction(1));
+        // Reads filename line by line and enqueues the instruction parsed from each line.
+        void loadProgram(const string &filename) {
+            ifstream file(filename);
+            string line;
+            while (getline(file, line)) {
+                Instruction* instr = parseLine(line);
+                if (instr != nullptr) instrQueue.enqueue(instr);
+            }
         }
         // Dequeues and executes every instruction in order, then prints the final CPU state.
         void run() {
@@ -781,15 +911,15 @@ int main() {
     cout << "\n===ROL Fix Test===" << endl;
     CPU cpu5;
     cpu5.getRegister(0).setValue(64); // 0x40
-    Instruction* rol = new RolInstruction(0);
+    Instruction* rol = new RolInstruction(0, 1);
     rol->execute(cpu5);
-    cout << "R0 after ROL(64): " << cpu5.getRegister(0).getValue() << " (expect -128)" << endl;
+    cout << "R0 after ROL(64, 1): " << cpu5.getRegister(0).getValue() << " (expect -128)" << endl;
     delete rol;
 
-    // Test Runner (Member 3: Ammar's class, integrated here)
-    cout << "\n===Runner Demo===" << endl;
+    // Test Runner reading a real .asm file (Member 3: Ammar's class, integrated here)
+    cout << "\n===Runner Demo (test_program.asm)===" << endl;
     Runner runner;
-    runner.loadProgram();
+    runner.loadProgram("test_program.asm");
     runner.run();
 
     return 0;
