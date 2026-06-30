@@ -924,14 +924,17 @@ class Runner {
                 if (instr != nullptr) instrQueue.enqueue(instr);
             }
         }
-        // Dequeues and executes every instruction in order, then prints the final CPU state.
-        void run() {
+        // Dequeues and executes every instruction in order. If stepMode is true, the
+        // full VM state is dumped after every single instruction (for report
+        // screenshots); otherwise only the final state is dumped, per spec.
+        void run(bool stepMode = false) {
             while (!instrQueue.isEmpty()) {
                 Instruction* instr = instrQueue.dequeue();
                 instr->execute(cpu);
                 delete instr;
+                if (stepMode) cpu.displayState();
             }
-            cpu.displayState();
+            if (!stepMode) cpu.displayState();
         }
 };
 
@@ -957,12 +960,15 @@ void demoPolymorphism() {
 
 // Entry point: loads the assembly program named on the command line (examiners can
 // pass their own .asm file here), defaulting to test_program.asm if none is given.
+// A second argument "--step" dumps the full VM state after every instruction
+// instead of just at the end (useful for report screenshots).
 int main(int argc, char* argv[]) {
     demoPolymorphism();
     cout << "\n";
     string filename = (argc > 1) ? argv[1] : "test_program.asm";
+    bool stepMode = (argc > 2 && string(argv[2]) == "--step");
     Runner runner;
     runner.loadProgram(filename);
-    runner.run();
+    runner.run(stepMode);
     return 0;
 }
