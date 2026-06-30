@@ -3,6 +3,7 @@
 #include <fstream>
 #include <string>
 #include <cctype>
+#include <cstdlib>
 using namespace std;
 
 // Member 1: Adam
@@ -166,14 +167,16 @@ class Stack {
 
         }
 
-        // Pops and returns the top value, or 0 if the stack is empty.
+        // Pops the top value off the stack. Per spec, popping an empty stack
+        // is a fatal error that stops the program.
         int pop() {
-            if (!isEmpty()) {
-                int val = data[top];
-                top--;
-                return val;
+            if (isEmpty()) {
+                cerr << "FATAL: POP on empty stack" << endl;
+                exit(1);
             }
-            return 0;
+            int val = data[top];
+            top--;
+            return val;
         }
 
         // Returns the top value without removing it, or 0 if empty.
@@ -242,27 +245,27 @@ class CPU {
 
         // Prints the full VM state (registers, flags, PC, memory) in the required output format.
         void displayState() {
-            cout << "#Begin#" << endl;
+            cout << dec << "#Begin#" << endl;
 
             cout << "#Registers";
             for (int i = 0; i < 8; i++) {
-                cout << "#" << setfill('0') << setw(4) << hex
+                cout << "#" << setfill('0') << setw(4)
                      << (registers[i].getValue() & 0xFF);
             }
             cout << "#" << endl;
 
-            cout << "#Flags#OF#" << dec << flags.getOF()
+            cout << "#Flags#OF#" << flags.getOF()
                  << "#UF#" << flags.getUF()
                  << "#CF#" << flags.getCF()
                  << "#ZF#" << flags.getZF() << "#" << endl;
 
-            cout << "#PC#" << setfill('0') << setw(4) << hex
+            cout << "#PC#" << setfill('0') << setw(4)
                  << (int)PC << "#" << endl;
 
             cout << "#Memory#" << endl;
             for (int row = 0; row < 8; row++){
                 for(int col = 0; col < 8; col++) {
-                    cout << "#" << setfill('0') << setw(4) << hex
+                    cout << "#" << setfill('0') << setw(4)
                         <<(memory.read(row * 8 + col) & 0xFF);
 
                 }
@@ -653,10 +656,11 @@ class InputInstruction : public IOInstruction {
         int dest;
     public:
         InputInstruction(int d) : dest(d) {}
-        // Prompts for a value, stores it in dest, updates flags, advances PC.
+        // Prompts with "?" on a new line (per spec), stores the value in dest,
+        // updates flags, advances PC.
         void execute(CPU &cpu) {
             int val;
-            cout << "Enter value: ";
+            cout << endl << "?";
             cin >> val;
             cpu.getRegister(dest).setValue(val);
             cpu.updateFlags(val);
@@ -833,7 +837,15 @@ static Instruction* buildStack(const string &op, const string &op1) {
                            : (Instruction*)new PopInstruction(reg);
 }
 
+// Returns true if tok still has internal whitespace after trimming -- a valid single
+// operand (register/immediate/[addr]/flag name) never does, so this catches stray
+// leftover text, e.g. a second instruction crammed onto the same line.
+static bool hasInternalSpace(const string &tok) {
+    return tok.find(' ') != string::npos || tok.find('\t') != string::npos;
+}
+
 // Parses one .asm line into the matching Instruction, or nullptr for blank/comment/unknown lines.
+// Exits with an error if more than one instruction is found on the line (per spec).
 static Instruction* parseLine(const string &rawLine) {
     string line = rawLine;
     size_t semi = line.find(';');
@@ -849,6 +861,11 @@ static Instruction* parseLine(const string &rawLine) {
     size_t comma = rest.find(',');
     string op1 = trim(comma == string::npos ? rest : rest.substr(0, comma));
     string op2 = (comma == string::npos) ? "" : trim(rest.substr(comma + 1));
+
+    if (hasInternalSpace(op1) || hasInternalSpace(op2)) {
+        cerr << "ERROR: more than one instruction found on one line: " << rawLine << endl;
+        exit(1);
+    }
 
     if (opcode == "MOV") return buildMov(op1, op2);
     if (opcode == "ADD" || opcode == "SUB" || opcode == "MUL" ||
@@ -873,12 +890,17 @@ class Runner {
         MyQueue instrQueue;
         CPU cpu;
     public:
-        // Reads filename line by line and enqueues the instruction parsed from each line.
+        // Reads filename into a MyVector<string> (one element per line, per spec), then
+        // parses each stored line into an Instruction and enqueues it for execution.
         void loadProgram(const string &filename) {
+            MyVector<string> lines;
             ifstream file(filename);
             string line;
             while (getline(file, line)) {
-                Instruction* instr = parseLine(line);
+                lines.push_back(line);
+            }
+            for (int i = 0; i < lines.size(); i++) {
+                Instruction* instr = parseLine(lines.get(i));
                 if (instr != nullptr) instrQueue.enqueue(instr);
             }
         }
