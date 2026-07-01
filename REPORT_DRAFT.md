@@ -390,7 +390,17 @@ Trace of **`factorial4.asm`** (`./practice factorial4.asm --step`) — all flags
 | 7 | `MUL R0, R1` | 24 | 4 | 7 |
 | 8 | `DISPLAY R0` (prints 24) | 24 | 4 | 8 |
 
-> 📌 **TODO:** add screenshots of the `--step` output below (save as `screenshots/step-demo-1.png`, `step-demo-2.png`, `step-demo-3.png` and embed here).
+**Steps 1–3** (command + polymorphism demo + MOV R0,1 / MOV R1,2 / MUL R0,R1):
+
+![Step-by-step demo part 1](screenshots/step-demo-1.png)
+
+**Steps 4–7** (MOV R1,3 / MUL R0,R1 / MOV R1,4 / MUL R0,R1 → R0=24):
+
+![Step-by-step demo part 2](screenshots/step-demo-2.png)
+
+**Step 8** (DISPLAY R0 — final state dump, PC=8):
+
+![Step-by-step demo part 3](screenshots/step-demo-3.png)
 
 ---
 
@@ -447,7 +457,7 @@ This assignment provided practical experience applying encapsulation, inheritanc
 - [x] Class diagram (§2.3) rendered and embedded.
 - [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
 - [x] Screenshots for §4.2–4.4 captured and embedded.
-- [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
+- [x] Step-by-step screenshots for §5 captured and embedded (factorial4.asm --step, 3 screenshots covering all 8 instructions).
 - [ ] Capture a flag-overflow screenshot for §3.2.
 - [ ] Convert this Markdown file to PDF and rename to `TT9L_I.pdf`.
 - [ ] Record the video (all members explaining their own contribution + live compile/run demo) — see spec §7.3.
