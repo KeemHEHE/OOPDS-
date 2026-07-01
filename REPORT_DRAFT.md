@@ -1,7 +1,7 @@
 # CCP6124 OOPDS — Virtual Machine and Assembly Language Interpreter
-**Tutorial Section:** [TUTORIAL e.g. TT01] &nbsp;&nbsp; **Group:** [GROUP e.g. G01] &nbsp;&nbsp; **Term:** 2610
+**Tutorial Section:** TT9L &nbsp;&nbsp; **Group:** I &nbsp;&nbsp; **Term:** 2610
 
-> 📌 **TODO before submission:** rename this file to `<tutorial>_<group>.pdf` (e.g. `TT01_G01.pdf`) and convert it to PDF — the spec requires PDF only.
+> 📌 **TODO before submission:** convert this file to PDF and rename to `TT9L_I.pdf`. Rename `practice.cpp` to `TT9L_I.cpp`. Place both (plus the `.mpeg` video) in a folder named `TT9L_I` and zip as `TT9L_I.zip`.
 
 **Members:**
 | Name | Student ID | Contribution |
@@ -399,10 +399,10 @@ Trace of **`sum5.asm`** with inputs 10, 15, 20, 25, 30 (all flags stay 0 through
 ## 6. User Manual — Compiling & Running
 
 1. Ensure `g++` (supporting C++17) is installed.
-2. Place the source file (`<tutorial>_<group>.cpp`, e.g. `TT01_G01.cpp`) and any `.asm` program files in the same directory.
+2. Place the source file (`<tutorial>_<group>.cpp`, e.g. `TT9L_I.cpp`) and any `.asm` program files in the same directory.
 3. Compile from the command line:
    ```bash
-   g++ -std=c++17 -o vm TT01_G01.cpp
+   g++ -std=c++17 -o vm TT9L_I.cpp
    ```
 4. Run the compiled program, passing the assembly file as a command-line argument:
    ```bash
@@ -445,11 +445,11 @@ This assignment provided practical experience applying encapsulation, inheritanc
 ## Outstanding items before this report is submission-ready
 - [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
 - [x] Adeeb's and Ammar's student IDs filled in.
-- [ ] Fill in tutorial section and group number (still placeholders at the top of the report).
+- [x] Tutorial section (TT9L) and group number (I) filled in.
 - [x] Class diagram (§2.3) rendered and embedded.
 - [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
 - [x] Screenshots for §4.2–4.4 captured and embedded.
 - [ ] Capture per-instruction screenshots for the §5 step-by-step trace.
 - [ ] Capture a flag-overflow screenshot for §3.2.
-- [ ] Convert this Markdown file to PDF and rename to `<tutorial>_<group>.pdf`.
+- [ ] Convert this Markdown file to PDF and rename to `TT9L_I.pdf`.
 - [ ] Record the video (all members explaining their own contribution + live compile/run demo) — see spec §7.3.
