@@ -376,23 +376,21 @@ DISPLAY R0
 
 ## 5. Step-by-Step Runner Demonstration
 
-Trace of **`sum5.asm`** with inputs 10, 15, 20, 25, 30 (all flags stay 0 throughout since no overflow/underflow/zero result occurs):
+Trace of **`factorial4.asm`** (`./practice factorial4.asm --step`) — all flags stay 0 throughout since no overflow occurs. R2–R7 are always 0 and omitted. Verified directly from `--step` output:
 
-| Step | Instruction | R0 | R1 | R2 | R3 | R4 | PC |
-|------|------------|----|----|----|----|----|----|
-| start | — | 0 | 0 | 0 | 0 | 0 | 0 |
-| 1 | `INPUT R0` (10) | 10 | 0 | 0 | 0 | 0 | 1 |
-| 2 | `INPUT R1` (15) | 10 | 15 | 0 | 0 | 0 | 2 |
-| 3 | `INPUT R2` (20) | 10 | 15 | 20 | 0 | 0 | 3 |
-| 4 | `INPUT R3` (25) | 10 | 15 | 20 | 25 | 0 | 4 |
-| 5 | `INPUT R4` (30) | 10 | 15 | 20 | 25 | 30 | 5 |
-| 6 | `ADD R0, R1` | 25 | 15 | 20 | 25 | 30 | 6 |
-| 7 | `ADD R0, R2` | 45 | 15 | 20 | 25 | 30 | 7 |
-| 8 | `ADD R0, R3` | 70 | 15 | 20 | 25 | 30 | 8 |
-| 9 | `ADD R0, R4` | 100 | 15 | 20 | 25 | 30 | 9 |
-| 10 | `DISPLAY R0` (prints 100) | 100 | 15 | 20 | 25 | 30 | 10 |
+| Step | Instruction | R0 | R1 | PC |
+|------|------------|----|----|-----|
+| start | — | 0 | 0 | 0 |
+| 1 | `MOV R0, 1` | 1 | 0 | 1 |
+| 2 | `MOV R1, 2` | 1 | 2 | 2 |
+| 3 | `MUL R0, R1` | 2 | 2 | 3 |
+| 4 | `MOV R1, 3` | 2 | 3 | 4 |
+| 5 | `MUL R0, R1` | 6 | 3 | 5 |
+| 6 | `MOV R1, 4` | 6 | 4 | 6 |
+| 7 | `MUL R0, R1` | 24 | 4 | 7 |
+| 8 | `DISPLAY R0` (prints 24) | 24 | 4 | 8 |
 
-> 📌 **TODO:** the spec requires a screenshot of `displayState()`-equivalent output after **every** instruction, not just the final state — capture register/flag values at each row above (e.g. by temporarily adding a debug print, or stepping through with a debugger) and insert screenshots.
+> 📌 **TODO:** add screenshots of the `--step` output below (save as `screenshots/step-demo-1.png`, `step-demo-2.png`, `step-demo-3.png` and embed here).
 
 ---
 
