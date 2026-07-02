@@ -385,29 +385,33 @@ class MovInstruction : public Instruction {     //move a plain number into regis
         int mode;
 
     public:
-        // MOV Rdest, value (mode 0 = immediate). Pass mode explicitly as an int.
-        MovInstruction(int d, int v, int m) {
+    //dest = The destination register index.
+    //val = The immediate value (a plain number).
+    //src = The source register index.
+    //mode = Tells which addressing mode is being used:
+
+        MovInstruction(int d, int v, int m) {  //Constructor for Immediate Mode,example  MOV R1, 5.
             dest = d;
             val = v;
             src = -1;
             mode = m;
         }
-        // MOV Rdest, Rsrc / MOV Rdest, [Rsrc]. Pass true for indirect, false for direct register mode.
-        MovInstruction(int d, int s, bool indirect) {
+        // Pass true for indirect, false for direct register mode.
+        MovInstruction(int d, int s, bool indirect) {       //Example: MOV R1, R2 → indirect = false, mode = 1.
             dest = d;
             src = s;
-            val = 0;
+            val = 0;                                // val = 0 since not needed.
             mode = indirect ? 2 : 1;
         }
 
         // Resolves the source value per mode, stores it into dest, then updates flags and PC.
         void execute(CPU &cpu) {
             int result;
-            if (mode == 0) {
+            if (mode == 0) {        //Mode 0 (Immediate): result = val.
                 result = val;
-            } else if (mode == 1) {
+            } else if (mode == 1) {     //result = value inside src register.   
                 result = cpu.getRegister(src).getValue();
-            } else {
+            } else {                           //Mode 2 (Indirect): result = value from memory at address stored in src register.
                 int addr = cpu.getRegister(src).getValue();
                 result = cpu.getMemory().read(addr);
             }
@@ -419,8 +423,6 @@ class MovInstruction : public Instruction {     //move a plain number into regis
 
 // Member 2: Adeeb
 // ADD Rdest, Rsrc or ADD Rdest, imm -> dest = dest + src. The spec's own worked
-// example ("ADD R1, 6") uses an immediate despite section 3.5 saying both operands
-// are registers, so both forms are supported, same as MovInstruction's modes.
 class AddInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
@@ -429,16 +431,16 @@ class AddInstruction : public ArithmeticInstruction {
         AddInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
         // Adds src (register or immediate) into dest, updates flags, advances PC.
         void execute(CPU &cpu) {
-            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
+            int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();  //If isImmediate = true, src is treated as a number. Otherwise, fetch value from register src.
             int res = cpu.getRegister(dest).getValue() + srcVal;
-            cpu.getRegister(dest).setValue(res);
-            cpu.updateFlags(res);
+            cpu.getRegister(dest).setValue(res);  //Store result back in dest.
+            cpu.updateFlags(res);    //Update flags (zero, negative, etc.).
             cpu.incrementPC();
         }
 };
 
 // Member 2: Adeeb
-// SUB Rdest, Rsrc or SUB Rdest, imm -> dest = dest - src.
+//Same as ADD, but subtraction. -> dest = dest - srcVal.
 class SubInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
@@ -451,12 +453,12 @@ class SubInstruction : public ArithmeticInstruction {
             int res = cpu.getRegister(dest).getValue() - srcVal;
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
-            cpu.incrementPC();
+            cpu.incrementPC();  //Store result, update flags, increment PC.
         }
 };
 
 // Member 2: Adeeb
-// MUL Rdest, Rsrc or MUL Rdest, imm -> dest = dest * src.
+//  dest = dest * src.
 class MulInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
@@ -466,7 +468,7 @@ class MulInstruction : public ArithmeticInstruction {
         // Multiplies dest by src (register or immediate), updates flags, advances PC.
         void execute(CPU &cpu) {
             int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
-            int res = cpu.getRegister(dest).getValue() * srcVal;
+            int res = cpu.getRegister(dest).getValue() * srcVal;  //Multiply destination register by source value.
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
             cpu.incrementPC();
@@ -474,18 +476,17 @@ class MulInstruction : public ArithmeticInstruction {
 };
 
 // Member 2: Adeeb
-// DIV Rdest, Rsrc or DIV Rdest, imm -> dest = dest / src.
+// dest = dest / src.
 class DivInstruction : public ArithmeticInstruction {
     private:
         int dest, src;
         bool isImmediate;
     public:
         DivInstruction(int d, int s, bool isImm = false) { dest = d; src = s; isImmediate = isImm; }
-        // Divides dest by src (register or immediate) when src isn't 0
-        // (leaving dest untouched otherwise), then advances PC.
+        // If srcVal != 0, divide destination register by source value.
         void execute(CPU &cpu) {
             int srcVal = isImmediate ? src : cpu.getRegister(src).getValue();
-            if (srcVal != 0) {
+            if (srcVal != 0) {    
                 int res = cpu.getRegister(dest).getValue() / srcVal;
                 cpu.getRegister(dest).setValue(res);
                 cpu.updateFlags(res);
@@ -495,7 +496,7 @@ class DivInstruction : public ArithmeticInstruction {
 };
 
 // Member 2: Adeeb
-// INC Rdest -> dest = dest + 1
+// dest = dest + 1
 class IncInstruction : public ArithmeticInstruction {
     private:
         int dest;
@@ -503,10 +504,10 @@ class IncInstruction : public ArithmeticInstruction {
         IncInstruction(int d) { dest = d; }
         // Increments dest, updates flags from the raw result, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() + 1;
+            int res = cpu.getRegister(dest).getValue() + 1;  //Add 1.
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
-            cpu.incrementPC();
+            cpu.incrementPC();  //Store result, update flags, increment PC.
         }
 };
 
@@ -519,10 +520,10 @@ class DecInstruction : public ArithmeticInstruction {
         DecInstruction(int d) { dest = d; }
         // Decrements dest, updates flags from the raw result, advances PC.
         void execute(CPU &cpu) {
-            int res = cpu.getRegister(dest).getValue() - 1;
+            int res = cpu.getRegister(dest).getValue() - 1; //Subtract 1.
             cpu.getRegister(dest).setValue(res);
             cpu.updateFlags(res);
-            cpu.incrementPC();
+            cpu.incrementPC();  //Store result, update flags, increment PC.
         }
 };
 
