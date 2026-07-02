@@ -8,6 +8,9 @@
 using namespace std;
 
 // Member 1: Adam
+// OOP: Encapsulation (private value, accessed only via getValue/setValue) +
+// Inheritance/Polymorphism (base class for GeneralRegister; virtual destructor
+// allows safe deletion through a base Register*). No custom data structure here.
 class Register {
     private:
         signed char value;
@@ -43,7 +46,8 @@ class Register {
 };
 
 // Member 1: Adam
-//
+// OOP: Inheritance (derives from Register) + Encapsulation (private id).
+// No custom data structure here.
 class GeneralRegister : public Register {
     private:
         int id;
@@ -59,6 +63,8 @@ class GeneralRegister : public Register {
 };
 
 // Member 1: Adam
+// OOP: Encapsulation (private OF/UF/CF/ZF, accessed only via getters/setters).
+// This is the class CPU aggregates. No custom data structure here.
 class FlagRegister {
     private:
         int OF;
@@ -108,6 +114,9 @@ class FlagRegister {
 };
 
 // Member 1: Adam
+// Both: OOP - Encapsulation (private data[64], accessed only via bounds-checked
+// read/write). Data Structure - a fixed-size array is the underlying storage
+// that models the VM's 64-byte memory.
 class Memory {
     private:
         signed char data[64];
@@ -137,6 +146,10 @@ class Memory {
 };
 
 // Member 1: Adam
+// Both: Data Structure - custom LIFO Stack (array + top index), one of the
+// assignment's required self-implemented data structures (no STL). OOP -
+// Encapsulation (private data[]/top, exposed only through push/pop/peek/
+// isEmpty/isFull/getTop).
 class Stack {
     private:
         signed char data [64];
@@ -195,6 +208,11 @@ class Stack {
 };
 
 // Member 1: Adam
+// Both: OOP - Composition (owns Memory, destroyed with the CPU), Aggregation
+// (uses an externally-owned FlagRegister&), Encapsulation (private registers/
+// memory/flags/stack/PC/SI, exposed only via getters and controlled mutators).
+// Data Structure - registers[8] is a fixed array of GeneralRegister, and
+// pushStack/popStack delegate to the Stack data structure above.
 class CPU {
     private:
         GeneralRegister registers[8] = {0,1,2,3,4,5,6,7};
@@ -706,6 +724,9 @@ class DisplayInstruction : public IOInstruction {
 };
 
 // Member 1: Adam
+// OOP: Inheritance (derives from abstract Instruction) + Polymorphism
+// (execute() overridden and invoked through an Instruction* in the program's
+// instruction vector). No data structure interaction.
 // RESET <CF|OF|UF|ZF> -> clears exactly one flag back to 0.
 class ResetInstruction : public Instruction {
     private:
@@ -724,6 +745,8 @@ class ResetInstruction : public Instruction {
 };
 
 // Member 1: Adam
+// Both: OOP - Inheritance + Polymorphism (as above). Data Structure - drives
+// the Stack via cpu.pushStack().
 // PUSH Rsrc -> pushes register src's value onto the stack.
 class PushInstruction : public Instruction {
     private:
@@ -738,6 +761,8 @@ class PushInstruction : public Instruction {
 };
 
 // Member 1: Adam
+// Both: OOP - Inheritance + Polymorphism (as above). Data Structure - drives
+// the Stack via cpu.popStack().
 // POP Rdest -> pops the top of the stack into register dest.
 class PopInstruction : public Instruction {
     private:

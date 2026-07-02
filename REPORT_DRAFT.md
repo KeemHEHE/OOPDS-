@@ -451,7 +451,7 @@ This assignment provided practical experience applying encapsulation, inheritanc
 ---
 
 ## Outstanding items before this report is submission-ready
-- [ ] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
+- [x] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
 - [x] Adeeb's and Ammar's student IDs filled in.
 - [x] Tutorial section (TT9L) and group number (I) filled in.
 - [x] Class diagram (§2.3) rendered and embedded.
