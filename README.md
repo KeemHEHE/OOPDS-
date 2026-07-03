@@ -9,16 +9,16 @@ See `Virtualmachine2610v1.21 (1).pdf` for the full assignment spec, and
 ## Build
 
 ```bash
-g++ -std=c++17 -o practice practice.cpp
+g++ -std=c++17 -o TT9L_I TT9L_I.cpp
 ```
 
 ## Run
 
 ```bash
-./practice                     # runs test_program.asm by default
-./practice myfile.asm          # runs a specific .asm file
-./practice myfile.asm --step   # dumps the full VM state after every instruction
-                                # (instead of just at the end) -- useful for debugging
+./TT9L_I                     # runs test_program.asm by default
+./TT9L_I myfile.asm          # runs a specific .asm file
+./TT9L_I myfile.asm --step   # dumps the full VM state after every instruction
+                              # (instead of just at the end) -- useful for debugging
 ```
 
 `INPUT` instructions prompt with `?` — type a number and press Enter.
