@@ -37,161 +37,6 @@ The system is organized into three layers:
 
 ![UML class diagram](screenshots/class-diagram.png)
 
-Mermaid source (kept for reference / re-rendering if needed):
-
-```mermaid
-classDiagram
-    class Register {
-        -signed char value
-        +setValue(int n)
-        +getValue() int
-        +display()
-    }
-    class GeneralRegister {
-        -int id
-        +getID() int
-    }
-    Register <|-- GeneralRegister
-
-    class FlagRegister {
-        -int OF
-        -int UF
-        -int CF
-        -int ZF
-        +setOF(int) +setUF(int) +setCF(int) +setZF(int)
-        +getOF() int +getUF() int +getCF() int +getZF() int
-        +displayFlags()
-        +reset()
-    }
-
-    class Memory {
-        -signed char data[64]
-        +write(int address, int value)
-        +read(int address) int
-    }
-
-    class Stack {
-        -signed char data[64]
-        -int top
-        +isEmpty() bool
-        +isFull() bool
-        +push(int value)
-        +pop() int  %% exits the program if called on an empty stack, per spec
-        +peek() int
-        +getTop() int
-    }
-
-    class CPU {
-        -GeneralRegister registers[8]
-        -Memory memory
-        -FlagRegister& flags
-        -Stack stack
-        -unsigned char PC
-        -unsigned char SI
-        +CPU(FlagRegister& fr)
-        +getRegister(int i) GeneralRegister
-        +getFlags() FlagRegister
-        +getMemory() Memory
-        +getPC() unsigned char
-        +incrementPC()
-        +updateFlags(int rawResult)
-        +getSI() unsigned char
-        +pushStack(int value)
-        +popStack() int
-        +displayState()  %% writes to both cout and output.txt
-    }
-
-    CPU *-- Memory : composition
-    CPU o-- FlagRegister : aggregation
-    CPU "1" *-- "8" GeneralRegister : composition
-    CPU *-- Stack : composition
-
-    class Instruction {
-        <<abstract>>
-        +execute(CPU& cpu)*
-    }
-    class ArithmeticInstruction { <<abstract>> }
-    class IOInstruction { <<abstract>> }
-    class ShiftInstruction { <<abstract>> }
-    Instruction <|-- ArithmeticInstruction
-    Instruction <|-- IOInstruction
-    Instruction <|-- ShiftInstruction
-
-    class AddInstruction
-    class SubInstruction
-    class MulInstruction
-    class DivInstruction
-    class IncInstruction
-    class DecInstruction
-    ArithmeticInstruction <|-- AddInstruction
-    ArithmeticInstruction <|-- SubInstruction
-    ArithmeticInstruction <|-- MulInstruction
-    ArithmeticInstruction <|-- DivInstruction
-    ArithmeticInstruction <|-- IncInstruction
-    ArithmeticInstruction <|-- DecInstruction
-
-    class RolInstruction
-    class RorInstruction
-    class ShlInstruction
-    class ShrInstruction
-    ShiftInstruction <|-- RolInstruction
-    ShiftInstruction <|-- RorInstruction
-    ShiftInstruction <|-- ShlInstruction
-    ShiftInstruction <|-- ShrInstruction
-
-    class InputInstruction
-    class DisplayInstruction
-    IOInstruction <|-- InputInstruction
-    IOInstruction <|-- DisplayInstruction
-
-    class MovInstruction
-    class LoadInstruction
-    class StoreInstruction
-    class ResetInstruction
-    class PushInstruction
-    class PopInstruction
-    Instruction <|-- MovInstruction
-    Instruction <|-- LoadInstruction
-    Instruction <|-- StoreInstruction
-    Instruction <|-- ResetInstruction
-    Instruction <|-- PushInstruction
-    Instruction <|-- PopInstruction
-
-    class MyVector~T~ {
-        -T* arr
-        -int cap
-        -int count
-        +push_back(T val)
-        +get(int i) T
-        +size() int
-        +isEmpty() bool
-    }
-
-    class MyQueue {
-        -Instruction* arr[128]
-        -int front
-        -int rear
-        -int count
-        +enqueue(Instruction* instr)
-        +dequeue() Instruction*
-        +isEmpty() bool
-        +isFull() bool
-    }
-
-    class Runner {
-        -MyQueue instrQueue
-        -FlagRegister flags
-        -CPU cpu
-        +loadProgram(string filename)
-        +run()
-    }
-    Runner *-- CPU : composition
-    Runner *-- FlagRegister : owns, passed to CPU
-    Runner *-- MyQueue
-    Runner ..> MyVector~string~ : uses during loadProgram
-    Runner ..> Instruction : polymorphic execute()
-```
-
 ---
 
 ## 3. Algorithms
@@ -206,55 +51,11 @@ classDiagram
 
 ![loadProgram activity diagram](screenshots/activity-loadprogram.png)
 
-Mermaid source (kept for reference / re-rendering if needed):
-
-```mermaid
-flowchart TD
-    A([Start: loadProgram]) --> B[Open .asm file]
-    B --> C{More lines in file?}
-    C -- Yes --> D[Read one line]
-    D --> E[Push line into lines vector]
-    E --> C
-    C -- No --> F[Set i = 0]
-    F --> G{i less than lines.size?}
-    G -- No --> Z([End: program queued])
-    G -- Yes --> H[Get lines at index i]
-    H --> I[Strip comment, trim whitespace]
-    I --> J{Line empty?}
-    J -- Yes --> Y[Increment i]
-    Y --> G
-    J -- No --> K[Split into opcode and operands]
-    K --> L{More than one instruction on this line?}
-    L -- Yes --> M[[Print error and exit program]]
-    L -- No --> N[Match opcode to instruction type]
-    N --> O[Construct matching Instruction subclass]
-    O --> P[Enqueue into instruction queue]
-    P --> Y
-```
-
 `Runner::run()` then dequeues and executes instructions in FIFO order until the queue is empty: `instr->execute(cpu)` (virtual dispatch — this is where polymorphism happens), then deletes the instruction. After the loop (or after every instruction, in `--step` mode), `cpu.displayState()` prints the VM state to both the screen and `output.txt`.
 
 **Activity diagram — `run()`:**
 
 ![run activity diagram](screenshots/activity-run.png)
-
-Mermaid source (kept for reference / re-rendering if needed):
-
-```mermaid
-flowchart TD
-    A([Start: run]) --> B{Instruction queue empty?}
-    B -- No --> C[Dequeue front instruction]
-    C --> D[Call execute on instruction via base pointer]
-    D --> E[Delete instruction]
-    E --> H{Step mode enabled?}
-    H -- Yes --> I[Dump VM state after this instruction]
-    I --> B
-    H -- No --> B
-    B -- Yes --> F{Step mode enabled?}
-    F -- No --> G[Dump final VM state]
-    G --> Z([End])
-    F -- Yes --> Z
-```
 
 ### 3.2 Flag Update Algorithm
 
@@ -275,18 +76,6 @@ Every `Instruction::execute()` that changes a destination register's value calls
 **Activity diagram — generic `Instruction::execute()` pattern (e.g. `AddInstruction`):**
 
 ![execute activity diagram](screenshots/activity-execute.png)
-
-Mermaid source (kept for reference / re-rendering if needed):
-
-```mermaid
-flowchart TD
-    A([Start: execute]) --> B[Read operand value: register, memory, or immediate]
-    B --> C[Compute raw integer result of the operation]
-    C --> D[Update flags from the raw unclamped result]
-    D --> E[Clamp and store result into destination register]
-    E --> F[Increment program counter]
-    F --> Z([End])
-```
 
 **Overflow demonstration (`overflow_demo.asm`):** `MOV R0, 100` then `ADD R0, R0` → raw result 200 exceeds 127, so `OF=1` and `CF=1` are set, and R0 clamps to **127**.
 
