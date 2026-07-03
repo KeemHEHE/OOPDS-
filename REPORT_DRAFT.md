@@ -290,7 +290,9 @@ flowchart TD
     F --> Z([End])
 ```
 
-> 📌 **TODO:** capture a screenshot of a sample `ADD` operation that overflows R0 past 127, showing `OF=1` in the output.
+**Overflow demonstration (`overflow_demo.asm`):** `MOV R0, 100` then `ADD R0, R0` → raw result 200 exceeds 127, so `OF=1` and `CF=1` are set, and R0 clamps to **127**.
+
+![Overflow flag demonstration](screenshots/overflow-output.png)
 
 ### 3.3 Rotate/Shift bit semantics
 
@@ -458,6 +460,6 @@ This assignment provided practical experience applying encapsulation, inheritanc
 - [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
 - [x] Screenshots for §4.2–4.4 captured and embedded.
 - [x] Step-by-step screenshots for §5 captured and embedded (factorial4.asm --step, 3 screenshots covering all 8 instructions).
-- [ ] Capture a flag-overflow screenshot for §3.2.
+- [x] Capture a flag-overflow screenshot for §3.2.
 - [ ] Convert this Markdown file to PDF and rename to `TT9L_I.pdf`.
 - [ ] Record the video (all members explaining their own contribution + live compile/run demo) — see spec §7.3.
