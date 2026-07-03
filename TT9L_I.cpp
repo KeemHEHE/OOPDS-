@@ -531,17 +531,22 @@ class DecInstruction : public ArithmeticInstruction {
 
 // Member 3: Ammar
 // Custom fixed-capacity circular queue used to hold the program's instructions.
+// [DATA STRUCTURE: Circular Queue, array-based]
 class MyQueue {
     private:
         Instruction* arr[128];
         int front, rear, count;
     public:
+        // [OOP: Constructor]
         MyQueue() : front(0), rear(0), count(0) {}
         // Returns true if no instructions are queued.
+        // [DATA STRUCTURE: queue empty-check]
         bool isEmpty() { return count == 0; }
         // Returns true if the queue has reached its 128-instruction capacity.
+        // [DATA STRUCTURE: queue full-check]
         bool isFull() { return count == 128; }
         // Adds instr to the back of the queue if there's room.
+        // [DATA STRUCTURE: enqueue operation, circular wraparound; OOP: Polymorphism - accepts any Instruction subtype via base pointer]
         void enqueue(Instruction* instr) {
             if (!isFull()) {
                 arr[rear] = instr;
@@ -550,6 +555,7 @@ class MyQueue {
             }
         }
         // Removes and returns the front instruction, or nullptr if empty.
+        // [DATA STRUCTURE: dequeue operation, circular wraparound; OOP: Polymorphism - returns base-class pointer]
         Instruction* dequeue() {
             if (!isEmpty()) {
                 Instruction* temp = arr[front];
@@ -564,13 +570,16 @@ class MyQueue {
 // Member 3: Ammar
 // LOAD Rdest, [addr] (direct) or LOAD Rdest, [Rs] (indirect, addrOrReg names the
 // register holding the address) -> copies a memory value into a register.
+// [OOP: Inheritance - derives from Instruction]
 class LoadInstruction : public Instruction {
     private:
         int dest, addrOrReg;
         bool indirect;
     public:
+        // [OOP: Constructor]
         LoadInstruction(int d, int a, bool ind = false) : dest(d), addrOrReg(a), indirect(ind) {}
         // Resolves the address (direct or via register), reads memory, stores into dest.
+        // [OOP: Polymorphism - overrides virtual Instruction::execute()]
         void execute(CPU &cpu) {
             int addr = indirect ? cpu.getRegister(addrOrReg).getValue() : addrOrReg;
             int val = cpu.getMemory().read(addr);
@@ -583,13 +592,16 @@ class LoadInstruction : public Instruction {
 // Member 3: Ammar
 // STORE Rsrc, addr (direct) or STORE Rsrc, [Rd] (indirect, addrOrReg names the
 // register holding the address) -> copies a register's value into memory.
+// [OOP: Inheritance - derives from Instruction]
 class StoreInstruction : public Instruction {
     private:
         int src, addrOrReg;
         bool indirect;
     public:
+        // [OOP: Constructor]
         StoreInstruction(int s, int a, bool ind = false) : src(s), addrOrReg(a), indirect(ind) {}
         // Resolves the address (direct or via register), writes register src's value there.
+        // [OOP: Polymorphism - overrides virtual Instruction::execute()]
         void execute(CPU &cpu) {
             int addr = indirect ? cpu.getRegister(addrOrReg).getValue() : addrOrReg;
             int val = cpu.getRegister(src).getValue();
@@ -601,21 +613,26 @@ class StoreInstruction : public Instruction {
 
 // Member 3: Ammar
 // Intermediate abstract class grouping SHL/SHR/ROL/ROR under one branch of the hierarchy.
+// [OOP: Abstraction + Inheritance - abstract intermediate class]
 class ShiftInstruction : public Instruction {
     public:
         // Still abstract; each shift/rotate opcode supplies its own execute().
+        // [OOP: Abstraction - pure virtual function makes this class abstract]
         virtual void execute(CPU &cpu) = 0;
 };
 
 // Member 3: Ammar
 // ROL Rdest, count -> rotate dest's bits left by count positions (0-7).
+// [OOP: Inheritance - derives from ShiftInstruction, two levels deep]
 class RolInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
+        // [OOP: Constructor]
         RolInstruction(int d, int c) : dest(d), count(c) {}
         // Rotates dest's bit pattern left by count, reinterpreting the byte as signed
         // before storing so a rotate never gets clamped like an overflowed value would.
+        // [OOP: Polymorphism - concrete override of pure virtual method]
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
             int n = ((count % 8) + 8) % 8;
@@ -628,12 +645,15 @@ class RolInstruction : public ShiftInstruction {
 
 // Member 3: Ammar
 // ROR Rdest, count -> rotate dest's bits right by count positions (0-7).
+// [OOP: Inheritance - derives from ShiftInstruction]
 class RorInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
+        // [OOP: Constructor]
         RorInstruction(int d, int c) : dest(d), count(c) {}
         // Rotates dest's bit pattern right by count; see RolInstruction for the signed-cast note.
+        // [OOP: Polymorphism - overrides execute()]
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
             int n = ((count % 8) + 8) % 8;
@@ -647,13 +667,16 @@ class RorInstruction : public ShiftInstruction {
 // Member 3: Ammar
 // SHL Rdest, count -> logical left shift, zero-filling from the right. Shifting by
 // 8 or more always yields 0 (every bit has been shifted out).
+// [OOP: Inheritance - derives from ShiftInstruction]
 class ShlInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
+        // [OOP: Constructor]
         ShlInstruction(int d, int c) : dest(d), count(c) {}
         // Shifts dest's unsigned byte pattern left by count (not the signed int value,
         // which would be UB/clamp incorrectly -- see RolInstruction), advances PC.
+        // [OOP: Polymorphism - overrides execute()]
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
             unsigned char res = (count >= 8) ? 0 : (unsigned char)(val << count);
@@ -666,13 +689,16 @@ class ShlInstruction : public ShiftInstruction {
 // Member 3: Ammar
 // SHR Rdest, count -> logical right shift, zero-filling from the left. Shifting by
 // 8 or more always yields 0.
+// [OOP: Inheritance - derives from ShiftInstruction]
 class ShrInstruction : public ShiftInstruction {
     private:
         int dest, count;
     public:
+        // [OOP: Constructor]
         ShrInstruction(int d, int c) : dest(d), count(c) {}
         // Shifts dest's unsigned byte pattern right by count (a signed >> would sign-extend
         // instead of zero-filling, which the spec explicitly requires), advances PC.
+        // [OOP: Polymorphism - overrides execute()]
         void execute(CPU &cpu) {
             unsigned char val = cpu.getRegister(dest).getValue();
             unsigned char res = (count >= 8) ? 0 : (unsigned char)(val >> count);
@@ -684,21 +710,26 @@ class ShrInstruction : public ShiftInstruction {
 
 // Member 3: Ammar
 // Intermediate abstract class grouping INPUT/DISPLAY under one branch of the hierarchy.
+// [OOP: Abstraction + Inheritance - abstract intermediate class]
 class IOInstruction : public Instruction {
     public:
         // Still abstract; INPUT and DISPLAY supply their own execute().
+        // [OOP: Abstraction - pure virtual function makes this class abstract]
         virtual void execute(CPU &cpu) = 0;
 };
 
 // Member 3: Ammar
 // INPUT Rdest -> reads a value from the user into a register.
+// [OOP: Inheritance - derives from IOInstruction, two levels deep]
 class InputInstruction : public IOInstruction {
     private:
         int dest;
     public:
+        // [OOP: Constructor]
         InputInstruction(int d) : dest(d) {}
         // Prompts with "?" on a new line (per spec), stores the value in dest,
         // updates flags, advances PC.
+        // [OOP: Polymorphism - concrete override of pure virtual method]
         void execute(CPU &cpu) {
             int val;
             cout << endl << "?";
@@ -711,12 +742,15 @@ class InputInstruction : public IOInstruction {
 
 // Member 3: Ammar
 // DISPLAY Rsrc -> prints a register's value to the console.
+// [OOP: Inheritance - derives from IOInstruction]
 class DisplayInstruction : public IOInstruction {
     private:
         int src;
     public:
+        // [OOP: Constructor]
         DisplayInstruction(int s) : src(s) {}
         // Prints register src's value, advances PC.
+        // [OOP: Polymorphism - concrete override of pure virtual method]
         void execute(CPU &cpu) {
             cout << "DISPLAY R" << src << " = " << cpu.getRegister(src).getValue() << endl;
             cpu.incrementPC();
@@ -781,6 +815,7 @@ class PopInstruction : public Instruction {
 // Member 3: Ammar
 // .asm parsing helpers. Lines look like "MOV R0, 5" / "LOAD R1, [10]" / "LOAD R1, [R2]" /
 // "; a comment". Anything after a ';' is ignored, as are blank lines.
+// [Note: these are free functions, not OOP - simple procedural string helpers]
 
 // Strips leading/trailing whitespace from s.
 static string trim(const string &s) {
@@ -945,6 +980,7 @@ static Instruction* parseLine(const string &rawLine) {
 // Member 3: Ammar
 // Drives a queued program: reads a .asm file, parses each line into an Instruction,
 // enqueues it, then executes the queue in order via the CPU.
+// [OOP: Class combining Composition - owns a MyQueue and a CPU]
 class Runner {
     private:
         MyQueue instrQueue;
@@ -952,10 +988,12 @@ class Runner {
         CPU cpu;
     public:
         // Constructs cpu aggregating this Runner's FlagRegister.
+        // [OOP: Constructor with member-initializer list]
         Runner() : cpu(flags) {}
 
         // Reads filename into a MyVector<string> (one element per line, per spec), then
         // parses each stored line into an Instruction and enqueues it for execution.
+        // [DATA STRUCTURE: uses MyVector (dynamic array) and MyQueue (circular queue); OOP: Polymorphism - parseLine returns base-class Instruction* for any opcode]
         void loadProgram(const string &filename) {
             MyVector<string> lines;
             ifstream file(filename);
@@ -971,6 +1009,7 @@ class Runner {
         // Dequeues and executes every instruction in order. If stepMode is true, the
         // full VM state is dumped after every single instruction (for report
         // screenshots); otherwise only the final state is dumped, per spec.
+        // [DATA STRUCTURE: drains the MyQueue via dequeue/isEmpty; OOP: Polymorphism - instr->execute(cpu) dispatches to the correct override at runtime]
         void run(bool stepMode = false) {
             while (!instrQueue.isEmpty()) {
                 Instruction* instr = instrQueue.dequeue();
