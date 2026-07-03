@@ -997,6 +997,10 @@ class Runner {
         void loadProgram(const string &filename) {
             MyVector<string> lines;
             ifstream file(filename);
+            if (!file.is_open()) {
+                cerr << "Error: could not open file \"" << filename << "\"" << endl;
+                exit(1);
+            }
             string line;
             while (getline(file, line)) {
                 lines.push_back(line);
