@@ -1,8 +1,6 @@
 # CCP6124 OOPDS — Virtual Machine and Assembly Language Interpreter
 **Tutorial Section:** TT9L &nbsp;&nbsp; **Group:** I &nbsp;&nbsp; **Term:** 2610
 
-> 📌 **TODO before submission:** convert this file to PDF and rename to `TT9L_I.pdf`. Rename `practice.cpp` to `TT9L_I.cpp`. Place both (plus the `.mpeg` video) in a folder named `TT9L_I` and zip as `TT9L_I.zip`.
-
 **Members:**
 | Name | Student ID | Contribution |
 |------|-----------|--------------|
@@ -434,8 +432,6 @@ Trace of **`factorial4.asm`** (`./practice factorial4.asm --step`) — all flags
 
 ## 7. AI Tool Usage Disclosure
 
-> 📌 **TODO:** confirm this section's wording/placement against the actual policy once confirmed with the course coordinator — this is a reasonable default, not a verified-compliant template.
-
 Claude Code (Anthropic) was used during development to assist with:
 - Code review and bug-finding — e.g. identifying that `ROL`/`ROR`/`SHL`/`SHR` corrupted register values by shifting the signed `int` representation instead of the unsigned byte pattern, and that `displayState()` was outputting hexadecimal instead of the decimal format the spec requires.
 - Integrating each member's individually-developed classes into the shared `practice.cpp`, including resolving structural gaps against the spec's required class diagram (adding the `ArithmeticInstruction`/`IOInstruction`/`ShiftInstruction` intermediate classes).
@@ -449,17 +445,3 @@ All AI-assisted code was reviewed, tested, and is understood by the team before 
 ## 8. Conclusion
 
 This assignment provided practical experience applying encapsulation, inheritance, composition, aggregation, and polymorphism to model a working virtual machine, and required implementing custom data structures (`MyVector`, `MyQueue`, `Stack`) rather than relying on STL. The resulting interpreter parses and executes a `.asm` assembly program end-to-end, correctly tracking register, memory, flag, and stack state, and matches the spec's exact output format — verified bit-for-bit against the spec's own worked examples for MOV, ADD, ROL, SHL, and the final state dump.
-
----
-
-## Outstanding items before this report is submission-ready
-- [x] Confirm AI usage disclosure policy with the coordinator and adjust §7 wording/placement accordingly.
-- [x] Adeeb's and Ammar's student IDs filled in.
-- [x] Tutorial section (TT9L) and group number (I) filled in.
-- [x] Class diagram (§2.3) rendered and embedded.
-- [x] All 3 activity diagrams (§3.1/§3.2) rendered and embedded.
-- [x] Screenshots for §4.2–4.4 captured and embedded.
-- [x] Step-by-step screenshots for §5 captured and embedded (factorial4.asm --step, 3 screenshots covering all 8 instructions).
-- [x] Capture a flag-overflow screenshot for §3.2.
-- [ ] Convert this Markdown file to PDF and rename to `TT9L_I.pdf`.
-- [ ] Record the video (all members explaining their own contribution + live compile/run demo) — see spec §7.3.
