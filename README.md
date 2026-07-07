@@ -34,6 +34,7 @@ The final VM state is printed to the screen **and** written to `output.txt`.
 | `factorial4.asm` | Computes 4! (no input needed) |
 | `overflow_demo.asm` | Demonstrates the OF flag being set |
 | `reset_all_demo.asm` | Sets each flag (OF, UF, CF, ZF) then resets it, one at a time |
+| `reset_target_flag.asm` | Bare `RESET <flag>` syntax reference for each flag |
 | `spec_sample.asm` | The assignment spec's own worked example |
 | `test_program.asm` | Exercises every supported instruction |
 
