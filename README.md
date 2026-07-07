@@ -33,6 +33,7 @@ The final VM state is printed to the screen **and** written to `output.txt`.
 | `average4.asm` | Averages 4 user-entered values |
 | `factorial4.asm` | Computes 4! (no input needed) |
 | `overflow_demo.asm` | Demonstrates the OF flag being set |
+| `reset_all_demo.asm` | Sets each flag (OF, UF, CF, ZF) then resets it, one at a time |
 | `spec_sample.asm` | The assignment spec's own worked example |
 | `test_program.asm` | Exercises every supported instruction |
 
